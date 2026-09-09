@@ -173,3 +173,30 @@ function renderPaymentDetails(method) {
         `;
     }
 }
+// -----------------------------------------
+// ربط Supabase وإرسال بيانات الحجز
+// -----------------------------------------
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+const supabaseUrl = 'https://ififfcevzgrhygiqcqfo.supabase.co'
+const supabaseKey = 'sb_publishable_uRpGBwNOk32ehkutQFbMpQ_bTk9Ix8Z'
+
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+async function saveBookingToSupabase(customerData, tripData) {
+  const { data, error } = await supabase
+    .from('Trip')
+    .insert([
+      { 
+        userId: customerData.id, 
+        "From location": tripData.from, 
+        "To location": tripData.to 
+      }
+    ]);
+
+  if (error) {
+    console.error('خطأ في الحفظ:', error.message);
+  } else {
+    console.log('تم الحفظ بنجاح:', data);
+  }
+}
