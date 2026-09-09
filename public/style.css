@@ -1,0 +1,430 @@
+/* ==========================================
+   إعدادات عامة
+========================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Tajawal', sans-serif;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+/* الخلفية الثابتة المطلوبة */
+.bg-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('bg.jpg'); /* سيتم رفع الصورة بهذا الاسم */
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    z-index: -1;
+}
+
+/* اللوجو الدائري الصغير فوق ع الشمال */
+.top-left-logo {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+/* الحاوية الرئيسية */
+.app-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* مسافة لعدم تغطية كلمة وصلني على السريع في الخلفية */
+.spacer {
+    height: 35vh; /* تعدل حسب موقع الكلمة في الصورة */
+}
+
+/* إخفاء واظهار الصفحات (Single Page App) */
+.section {
+    display: none;
+    animation: fadeIn 0.4s ease-in-out;
+}
+.section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================
+   تصميم المربعات البيضاء 
+========================================== */
+.white-box {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+}
+
+.box-title {
+    font-size: 1.2rem;
+    color: #1e3a8a;
+    margin-bottom: 20px;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* ==========================================
+   الفورم والخانات
+========================================== */
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+select, input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #0f172a;
+    background-color: #f8fafc;
+    outline: none;
+    transition: all 0.3s;
+}
+
+select:focus, input:focus {
+    border-color: #2563eb;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.main-btn {
+    width: 100%;
+    background-color: #10b981; /* لون اخضر زي جوباص */
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+}
+
+.main-btn:hover {
+    background-color: #059669;
+}
+
+.main-btn:disabled {
+    background-color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.error-msg {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: none;
+}
+
+/* ==========================================
+   مربع التواصل والأيقونات
+========================================== */
+.contact-box {
+    text-align: center;
+}
+
+.contact-text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 15px;
+}
+.phone-number {
+    color: #2563eb;
+    display: inline-block;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.icon {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: white;
+    text-decoration: none;
+    font-size: 1.3rem;
+    transition: transform 0.3s;
+}
+
+.icon:hover { transform: scale(1.1); }
+.icon.fb { background-color: #1877F2; }
+.icon.ig { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+.icon.wa { background-color: #25D366; }
+
+/* ==========================================
+   زر الرجوع
+========================================== */
+.back-btn {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    margin-bottom: 15px;
+    display: inline-block;
+    transition: 0.3s;
+}
+.back-btn:hover { background: #f1f5f9; }
+
+/* ==========================================
+   كروت الرحلات المتاحة
+========================================== */
+.trip-card {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    background: #fdfdfd;
+}
+
+.trip-route {
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 10px;
+}
+
+.trip-time {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #000;
+    display: block;
+}
+
+.trip-price {
+    position: absolute;
+    left: 15px;
+    top: 15px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #ef4444;
+}
+
+.trip-price span {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.btn-select-trip {
+    width: 100%;
+    background-color: #fff;
+    color: #d97706; /* لون برتقالي */
+    border: 2px solid #d97706;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.btn-select-trip:hover {
+    background-color: #d97706;
+    color: #fff;
+}
+
+/* ==========================================
+   طرق الدفع (راديو كاردز)
+========================================== */
+.payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.payment-card {
+    cursor: pointer;
+}
+
+.payment-card input {
+    display: none;
+}
+
+.card-content {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    transition: 0.3s;
+    background: #f8fafc;
+}
+
+.payment-card input:checked + .card-content {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.pay-name {
+    font-weight: 700;
+    color: #1e293b;
+    flex: 1;
+}
+
+.pay-en {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-left: 15px;
+}
+
+.pay-icon {
+    font-size: 1.5rem;
+    margin-right: 15px;
+}
+.pay-icon.vf { color: #e60000; }
+.pay-icon.insta { color: #8b5cf6; }
+
+/* ==========================================
+   تفاصيل الدفع النهائية
+========================================== */
+.payment-details-text {
+    background: #f1f5f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    line-height: 1.8;
+}
+
+.payment-details-text span {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.alert-triangle {
+    color: #eab308;
+    margin-left: 5px;
+}
+
+.insta-alert {
+    background: #fef08a;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #854d0e;
+    margin-bottom: 15px;
+}
+
+.whatsapp-upload {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.upload-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #334155;
+}
+
+.wa-btn {
+    display: inline-block;
+    background: #25D366;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.notes-section {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.notes-icon {
+    position: absolute;
+    top: -10px;
+    right: 15px;
+    background: #f59e0b;
+    color: white;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+}
+
+.notes-text {
+    font-size: 0.85rem;
+    color: #92400e;
+    line-height: 1.6;
+    font-weight: 700;
+}
+
+.thank-you-msg {
+    text-align: center;
+    color: #10b981;
+    font-weight: 800;
+    font-size: 1.1rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 15px;
+}
+
+@media (max-width: 480px) {
+    .form-row {
+        flex-direction: column;
+    }
+}

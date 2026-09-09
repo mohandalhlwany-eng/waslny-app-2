@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>وصلني على السريع</title>
+    <!-- خطوط جوجل (Tajawal) لخط عربي عصري -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- مكتبة الأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- خلفية الموقع الثابتة -->
+    <div class="bg-image"></div>
+
+    <!-- اللوجو فوق على الشمال -->
+    <img src="logo.png" alt="وصلني على السريع" class="top-left-logo" onerror="this.src='https://via.placeholder.com/80x80?text=Logo'">
+
+    <div class="app-container">
+        
+        <!-- ============================================== -->
+        <!-- الصفحة الرئيسية (الحجز والتواصل) -->
+        <!-- ============================================== -->
+        <div id="section-home" class="section active">
+            <!-- مسافة شفافة علشان نسيب الجملة اللي في الخلفية تبان -->
+            <div class="spacer"></div>
+
+            <!-- مربع الحجز الأبيض -->
+            <div class="white-box booking-box">
+                <h2 class="box-title"><i class="fa-solid fa-route"></i> احجز رحلتك</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>السفر من مدينة</label>
+                        <select id="city-from">
+                            <option value="" disabled selected>اختر المدينة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>السفر من محطة</label>
+                        <select id="station-from">
+                            <option value="" disabled selected>اختر المحطة</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>السفر إلى مدينة</label>
+                        <select id="city-to">
+                            <option value="" disabled selected>اختر المدينة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>السفر إلى محطة</label>
+                        <select id="station-to">
+                            <option value="" disabled selected>اختر المحطة</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="btn-show-trips" class="main-btn"><i class="fa-solid fa-magnifying-glass"></i> أعرض الرحلات</button>
+            </div>
+
+            <!-- مربع التواصل الأبيض -->
+            <div class="white-box contact-box">
+                <p class="contact-text">للتواصل د/ مهند الحلواني واتساب <span class="phone-number" dir="ltr">01026264522</span></p>
+                <div class="social-icons">
+                    <a href="https://www.facebook.com/share/1LkxKLi5XH/?mibextid=wwXIfr" target="_blank" class="icon fb"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="https://www.instagram.com/waslnisaree?stkn=YjFqNmpybzMzZHFt&utm_source=qr" target="_blank" class="icon ig"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://wa.me/message/O4DNU6GFS2UPM1" target="_blank" class="icon wa"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- صفحة عرض الرحلات المتاحة -->
+        <!-- ============================================== -->
+        <div id="section-trips" class="section hidden">
+            <button class="back-btn" onclick="goBack('section-home')"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+            <div class="white-box trips-container">
+                <h2 class="box-title">الرحلات المتاحة</h2>
+                <div id="trips-list">
+                    <!-- سيتم إضافة الرحلات هنا بالـ JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- صفحة إدخال البيانات -->
+        <!-- ============================================== -->
+        <div id="section-data" class="section hidden">
+            <button class="back-btn" onclick="goBack('section-trips')"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+            <div class="white-box form-box">
+                <h2 class="box-title">بيانات المسافر</h2>
+                <form id="passenger-form">
+                    <div class="form-group">
+                        <label>الاسم ثلاثي *</label>
+                        <input type="text" id="passenger-name" required placeholder="أدخل اسمك ثلاثي">
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الهاتف (الواتساب) *</label>
+                        <input type="tel" id="passenger-phone" required pattern="^01[0125][0-9]{8}$" maxlength="11" placeholder="مثال: 01012345678">
+                        <small class="error-msg" id="phone-error">يجب إدخال 11 رقم بشكل صحيح</small>
+                    </div>
+                    <button type="submit" class="main-btn">متابعة الدفع</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- صفحة اختيار طريقة الدفع -->
+        <!-- ============================================== -->
+        <div id="section-payment-method" class="section hidden">
+            <button class="back-btn" onclick="goBack('section-data')"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+            <div class="white-box payment-box">
+                <h2 class="box-title">اختر طريقة الدفع</h2>
+                
+                <div class="payment-options">
+                    <label class="payment-card">
+                        <input type="radio" name="payment-method" value="vodafone">
+                        <div class="card-content">
+                            <span class="pay-name">محفظة الكترونية (فودافون كاش)</span>
+                            <span class="pay-en">Vodafone Cash</span>
+                            <!-- ايقونة تعبيرية مؤقتة مكان اللوجو -->
+                            <i class="fa-solid fa-wallet pay-icon vf"></i>
+                        </div>
+                    </label>
+
+                    <label class="payment-card">
+                        <input type="radio" name="payment-method" value="instapay">
+                        <div class="card-content">
+                            <span class="pay-name">انستا باي</span>
+                            <span class="pay-en">Insta pay</span>
+                            <i class="fa-solid fa-building-columns pay-icon insta"></i>
+                        </div>
+                    </label>
+                </div>
+
+                <button id="btn-proceed-payment" class="main-btn" disabled>تأكيد الاختيار</button>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- صفحة تفاصيل الدفع (النهائية) -->
+        <!-- ============================================== -->
+        <div id="section-payment-details" class="section hidden">
+            <button class="back-btn" onclick="goBack('section-payment-method')"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+            <div class="white-box final-box">
+                
+                <!-- هذا الجزء سيتغير بناء على اختيار فودافون او انستاباي -->
+                <div id="dynamic-payment-info"></div>
+
+                <div class="whatsapp-upload">
+                    <p class="upload-title">اسكرين الدفع</p>
+                    <a href="https://wa.me/message/O4DNU6GFS2UPM1" target="_blank" class="wa-btn"><i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب</a>
+                </div>
+
+                <div class="notes-section">
+                    <div class="notes-icon"><i class="fa-solid fa-plus"></i></div>
+                    <p class="notes-text">
+                        <strong>ملحوظات :</strong><br>
+                        1- يتم مراجعة التحويلات تباعاً برجاء التأكد من الرقم و الاسم قبل تحويل المبلغ.<br>
+                        2- الحجز يعتبر مؤكداً بإكتمال العدد المطلوب و يتم ارسال رسالة بكافة التفاصيل لك قبل ميعاد السفر ٢٤ ساعة.<br>
+                        و في حالة عدم اكتمال العدد يتم استرجاع المبلغ قبل ميعاد السفر و إبلاغك قبلها.
+                    </p>
+                </div>
+
+                <div class="thank-you-msg">
+                    شكراً لحجزك معنا في وصلني ع السريع سيتم الرد عليك في اسرع وقت
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
