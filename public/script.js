@@ -100,7 +100,7 @@ function generateTrips() {
     });
 }
 
-function selectTrip() {
+window.selectTrip = function() {
     switchSection('section-data');
 }
 
