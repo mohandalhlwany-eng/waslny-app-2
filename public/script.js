@@ -209,24 +209,42 @@ const fromValue = cityFromEl ? cityFromEl.value : (stationFromEl ? stationFromEl
 const cityToEl = document.getElementById('cityToSelect');
 const stationToEl = document.getElementById('stationToSelect');
 const toValue = cityToEl ? cityToEl.value : (stationToEl ? stationToEl.value : '');
-                                                                                   
+
 const nameEl = document.getElementById('passenger-name');
 const phoneEl = document.getElementById('passenger-phone');
 const passengerName = nameEl ? nameEl.value : '';
 const passengerPhone = phoneEl ? phoneEl.value : '';
-// تجهيز البيانات (بدون ID ثابت عشان قاعدة البيانات تولده)
+
+// تجهيز البيانات
 const customerData = {
-    id: 1,
     name: passengerName,
     phone: passengerPhone
 };
 
+// تنفيذ الحفظ
+await saveBookingToTosupabase(customerData, fromValue, toValue);
+});
+// دالة الحفظ اللي بتستخدم شكل الإرسال بتاعك async function saveBookingToTosupabase(customerData, fromVal, toVal) { // 1. تسجيل المستخدم أولاً عشان نطلع الـ id const { data: userData, error: userError } = await supabase .from('users') .insert([ { name: customerData.name, phone: customerData.phone } ]) .select();
+if (userError) {
+    console.error('خطأ في حفظ المستخدم:', userError.message);
+    return;
+}
 
+const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
+
+// 2. تجهيز الـ tripData مع الـ user_id الحقيقي
 const tripData = {
-    From_location: fromValue,
-    To_location: toValue
+    user_id: newUserId,
+    From_location: fromVal,
+    To_location: toVal
 };
 
-// إرسال البيانات لـ Supabase
+// ده سطر الإرسال بنفس الطريقة اللي فضلتها بس مربوط بالصح
 const { data, error } = await supabase.from('Trip').insert([tripData]);
-});
+
+if (error) {
+    console.error('خطأ في حفظ الرحلة:', error.message);
+} else {
+    console.log('تم الحجز بنجاح', data);
+}
+}
