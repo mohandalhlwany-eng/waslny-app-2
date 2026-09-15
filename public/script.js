@@ -202,6 +202,7 @@ async function saveBookingToSupabase(customerData, tripData) {
 }
 
 document.getElementById('passenger-form').addEventListener('submit', async (e) => { e.preventDefault();
+console.log                                                                                   
 // جلب البيانات الأساسية
 const fromValue = document.getElementById('cityFromSelect').value || document.getElementById('stationFromSelect').value;
 const toValue = document.getElementById('cityToSelect').value || document.getElementById('stationToSelect').value;
