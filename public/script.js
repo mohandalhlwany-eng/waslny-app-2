@@ -222,29 +222,35 @@ const customerData = {
 };
 
 // تنفيذ الحفظ
-await saveBookingToTosupabase(customerData, fromValue, toValue);
-});
-// دالة الحفظ اللي بتستخدم شكل الإرسال بتاعك async function saveBookingToTosupabase(customerData, fromVal, toVal) { // 1. تسجيل المستخدم أولاً عشان نطلع الـ id const { data: userData, error: userError } = await supabase .from('users') .insert([ { name: customerData.name, phone: customerData.phone } ]) .select();
-if (userError) {
-    console.error('خطأ في حفظ المستخدم:', userError.message);
-    return;
+// تنفيذ الحفظ
+    await saveBookingToTosupabase(customerData, fromValue, toValue);
+
+// دالة الحفظ لوحدها في الصافي وبراحتها
+async function saveBookingToTosupabase(customerData, fromVal, toVal) {
+    // 1. تسجيل المستخدم أولاً عشان نطلع الـ id
+    const { data: userData, error: userError } = await supabase
+        .from('users')
+        .insert([
+            { name: customerData.name, phone: customerData.phone }
+        ])
+        .select();
+    if (userError) {
+        console.error('خطأ في حفظ المستخدم:', userError.message);
+        return;
+    }
+    const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
+    // 2. تجهيز الـ tripData مع الـ user_id الحقيقي
+    const tripData = {
+        user_id: newUserId,
+        From_location: fromVal,
+        To_location: toVal
+    };
+    // ده سطر الإرسال بتاعك اللي بتحبه
+    const { data, error } = await supabase.from('Trip').insert([tripData]);
+    if (error) {
+        console.error('خطأ في حفظ الرحلة:', error.message);
+    } else {
+        console.log('تم الحجز بنجاح', data);
+    }
 }
-
-const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
-
-// 2. تجهيز الـ tripData مع الـ user_id الحقيقي
-const tripData = {
-    user_id: newUserId,
-    From_location: fromVal,
-    To_location: toVal
-};
-
-// ده سطر الإرسال بنفس الطريقة اللي فضلتها بس مربوط بالصح
-const { data, error } = await supabase.from('Trip').insert([tripData]);
-
-if (error) {
-    console.error('خطأ في حفظ الرحلة:', error.message);
-} else {
-    console.log('تم الحجز بنجاح', data);
-}
-}
+⁠});⁠                         
