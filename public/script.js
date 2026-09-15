@@ -1,3 +1,7 @@
+// ==========================================
+// البيانات والدوال الأساسية (Data & Logic)
+// ==========================================
+
 // بيانات المدن والمحطات المترتبطة بها حسب طلبك بالضبط
 const locations = {
     "المنصورة": ["الجمالية", "ميت سلسيل", "الرياض", "ميت عاصم", "منية النصر", "دكرنس", "كفر القباب", "المنصورة الاستاد", "المنصورة سندوب", "منية سندوب", "ميت معاند", "أجا", "كفر عوض", "فيشا", "بشلا", "كوبري ابو نبهان ميت غمر", "كوبري دقادوس ميت غمر", "كوبري البراميل ميت غمر", "كوبري صهرجت الكبرى"],
@@ -196,55 +200,51 @@ async function      saveBookingToTosupabase(customerData, tripData) {
     }
 }
 
-document.getElementById('passenger-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // طلب البيانات الأساسية بالطريقة المباشرة والأمنة
-    const fromValue = document.getElementById('cityFromSelect')?.value || document.getElementById('stationFromSelect')?.value || '';
-    const toValue = document.getElementById('cityToSelect')?.valueasync (e) => {
-    e.preventDefault();
-    
-    // طلب ال'';
-    
-    const passengerName = document.getElementById('passenger-name')?.value || '';
-    const passengerPhone = document.getElementById('passenger-phone')?.value || '';
+document.getElementById('passenger-form').addEventListener('submit', async (e) => { e.preventDefault();
+// طلب البيانات الأساسية
+const cityFromEl = document.getElementById('cityFromSelect');
+const stationFromEl = document.getElementById('stationFromSelect');
+const fromValue = cityFromEl ? cityFromEl.value : (stationFromEl ? stationFromEl.value : '');
 
-    // تجهيز البيانات
-    const customerData = {
-        name: passengerName,
-        phone: passengerPhone
-    };
+const cityToEl = document.getElementById('cityToSelect');
+const stationToEl = document.getElementById('stationToSelect');
+const toValue = cityToEl ? cityToEl.value : (stationToEl ? stationToEl.value : '');
 
-    // تنفيذ الحفظ
-    await saveBookingToTosupabase(customerData, fromValue, toValue);
+const nameEl = document.getElementById('passenger-name');
+const phoneEl = document.getElementById('passenger-phone');
+const passengerName = nameEl ? nameEl.value : '';
+const passengerPhone = phoneEl ? phoneEl.value : '';
+
+// تجهيز البيانات
+const customerData = {
+    name: passengerName,
+    phone: passengerPhone
+};
+
+// تنفيذ الحفظ
+await saveBookingToTosupabase(customerData, fromValue, toValue);
 });
-
-// دالة الحفظ لوحدها في الصافي وبراحتها
-async function saveBookingToTosupabase(customerData, fromVal, toVal) {
-    // 1. تسجيل المستخدم أولاً عشان نطلع الـ id
-    const { data: userData, error: userError } = await supabase
-        .from('users')
-        .insert([
-            { name: customerData.name, phone: customerData.phone }
-        ])
-        .select();
-    if (userError) {
-        console.error('خطأ في حفظ المستخدم:', userError.message);
-        return;
-    }
-    const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
-    // 2. تجهيز الـ tripData مع الـ user_id الحقيقي
-    const tripData = {
-        user_id: newUserId,
-        From_location: fromVal,
-        To_location: toVal
-    };
-    // ده سطر الإرسال بتاعك اللي بتحبه
-    const { data, error } = await supabase.from('Trip').insert([tripData]);
-  if (error) {
-        console.error('خطأ في حفظ الرحلة:', error.message);
-    } else {
-        console.log('تم الحجز بنجاح', data);
-    }
+// دالة الحفظ اللي بتستخدم شكل الإرسال بتاعك async function saveBookingToTosupabase(customerData, fromVal, toVal) { // 1. تسجيل المستخدم أولاً عشان نطلع الـ id const { data: userData, error: userError } = await supabase .from('users') .insert([ { name: customerData.name, phone: customerData.phone } ]) .select();
+if (userError) {
+    console.error('خطأ في حفظ المستخدم:', userError.message);
+    return;
 }
-});
+
+const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
+
+// 2. تجهيز الـ tripData مع الـ user_id الحقيقي
+const tripData = {
+    user_id: newUserId,
+    From_location: fromVal,
+    To_location: toVal
+};
+
+// ده سطر الإرسال بنفس الطريقة اللي فضلتها بس مربوط بالصح
+const { data, error } = await supabase.from('Trip').insert([tripData]);
+
+if (error) {
+    console.error('خطأ في حفظ الرحلة:', error.message);
+} else {
+    console.log('تم الحجز بنجاح', data);
+}
+}
