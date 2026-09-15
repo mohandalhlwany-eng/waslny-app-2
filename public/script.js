@@ -203,13 +203,19 @@ async function saveBookingToSupabase(customerData, tripData) {
 
 document.getElementById('passenger-form').addEventListener('submit', async (e) => { e.preventDefault();
 console.log                                                                                   
-// جلب البيانات الأساسية
-const fromValue = document.getElementById('cityFromSelect').value || document.getElementById('stationFromSelect').value;
-const toValue = document.getElementById('cityToSelect').value || document.getElementById('stationToSelect').value;
+// طلب البيانات الأساسية //
+const cityFromEl = document.getElementById('cityFromSelect');
+const stationFromEl = document.getElementById('stationFromSelect');
+const fromValue = (cityFromEl ? cityFromEl.value : '') || (stationFromEl ? stationFromEl.value : '');
 
-const passengerName = document.getElementById('passenger-name').value;
-const passengerPhone = document.getElementById('passenger-phone').value;
+const cityToEl = document.getElementById('cityToSelect');
+const stationToEl = document.getElementById('stationToSelect');
+const toValue = (cityToEl ? cityToEl.value : '') || (stationToEl ? stationToEl.value : '');
 
+const nameEl = document.getElementById('passenger-name');
+const phoneEl = document.getElementById('passenger-phone');
+const passengerName = nameEl ? nameEl.value : '';
+const passengerPhone = phoneEl ? phoneEl.value : '':
 // تجهيز البيانات (بدون ID ثابت عشان قاعدة البيانات تولده)
 const customerData = {
     id: 1,
