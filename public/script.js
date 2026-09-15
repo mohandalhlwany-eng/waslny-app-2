@@ -201,15 +201,14 @@ async function      saveBookingToTosupabase(customerData, tripData) {
 }
 
 document.getElementById('passenger-form').addEventListener('submit', async (e) => { e.preventDefault();
-console.log                                                                                   
-// طلب البيانات الأساسية //
+// طلب البيانات الأساسية
 const cityFromEl = document.getElementById('cityFromSelect');
 const stationFromEl = document.getElementById('stationFromSelect');
-const fromValue = (cityFromEl && cityFromEl.value)  (stationFromEl && stationFromEl.value)  '';
+const fromValue = (cityFromEl && cityFromEl.value) || (stationFromEl && stationFromEl.value) || '';
 
 const cityToEl = document.getElementById('cityToSelect');
 const stationToEl = document.getElementById('stationToSelect');
-const toValue = (cityToEl && cityToEl.value)  (stationToEl && stationToEl.value)  '';
+const toValue = (cityToEl && cityToEl.value) || (stationToEl && stationToEl.value) || '';
 
 const nameEl = document.getElementById('passenger-name');
 const phoneEl = document.getElementById('passenger-phone');
