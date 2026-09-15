@@ -252,5 +252,4 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
     } else {
         console.log('تم الحجز بنجاح', data);
     }
-}
-⁠});⁠                         
+});⁠                         
