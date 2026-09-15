@@ -215,7 +215,7 @@ const toValue = (cityToEl ? cityToEl.value : '') || (stationToEl ? stationToEl.v
 const nameEl = document.getElementById('passenger-name');
 const phoneEl = document.getElementById('passenger-phone');
 const passengerName = nameEl ? nameEl.value : '';
-const passengerPhone = phoneEl ? phoneEl.value : '':
+const passengerPhone = phoneEl ? phoneEl.value : '';
 // تجهيز البيانات (بدون ID ثابت عشان قاعدة البيانات تولده)
 const customerData = {
     id: 1,
