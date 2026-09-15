@@ -223,10 +223,10 @@ const customerData = {
 
 
 const tripData = {
-    from: fromValue,
-    to: toValue
+    From_location: fromValue,
+    To_location: toValue
 };
 
 // إرسال البيانات لـ Supabase
-const { data, error } = await supabase.from('Trip').insert([{ From_location: fromValue, To_location: toValue }]);
+const { data, error } = await supabase.from('Trip').insert([tripData]);
 });
