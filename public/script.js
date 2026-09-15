@@ -247,9 +247,10 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
     };
     // ده سطر الإرسال بتاعك اللي بتحبه
     const { data, error } = await supabase.from('Trip').insert([tripData]);
-    if (error) {
+  if (error) {
         console.error('خطأ في حفظ الرحلة:', error.message);
     } else {
         console.log('تم الحجز بنجاح', data);
     }
-});⁠                         
+}
+});
