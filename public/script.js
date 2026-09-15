@@ -183,22 +183,21 @@ const supabaseKey = 'sb_publishable_uRpGBwNOk32ehkutQFbMpQ_bTk9Ix8Z'
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-async function saveBookingToSupabase(customerData, tripData) {
-  const { data, error } = await supabase
-    .from('Trip')
-    .insert([
-      { 
-        userId: customerData.id, 
-        "From location": tripData.from, 
-        "To location": tripData.to 
-      }
-    ]);
-
-  if (error) {
-    console.error('خطأ في الحفظ:', error.message);
-  } else {
-    console.log('تم الحفظ بنجاح:', data);
-  }
+async function      saveBookingToTosupabase(customerData, tripData) {
+    const { data, error } = await supabase
+        .from('Trip')
+        .insert([
+            {
+                user_id: customerData.id,
+                From_location: tripData.from,
+                To_location: tripData.to
+            }
+        ]);
+    if (error) {
+        console.error('خطأ في الحفظ:', error.message);
+    } else {
+        console.log('تم الحفظ بنجاح', data);
+    }
 }
 
 document.getElementById('passenger-form').addEventListener('submit', async (e) => { e.preventDefault();
