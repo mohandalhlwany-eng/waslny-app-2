@@ -200,3 +200,28 @@ async function saveBookingToSupabase(customerData, tripData) {
     console.log('تم الحفظ بنجاح:', data);
   }
 }
+
+document.getElementById('passenger-form').addEventListener('submit', async (e) => { e.preventDefault();
+// جلب البيانات الأساسية
+const fromValue = document.getElementById('cityFromSelect').value || document.getElementById('stationFromSelect').value;
+const toValue = document.getElementById('cityToSelect').value || document.getElementById('stationToSelect').value;
+
+const passengerName = document.getElementById('passenger-name').value;
+const passengerPhone = document.getElementById('passenger-phone').value;
+
+// تجهيز البيانات (بدون ID ثابت عشان قاعدة البيانات تولده)
+const customerData = {
+    id: 1,
+    name: passengerName,
+    phone: passengerPhone
+};
+
+
+const tripData = {
+    from: fromValue,
+    to: toValue
+};
+
+// إرسال البيانات لـ Supabase
+await saveBookingToSupabase(customerData, tripData);
+});
