@@ -228,5 +228,5 @@ const tripData = {
 };
 
 // إرسال البيانات لـ Supabase
-await saveBookingToSupabase(customerData, tripData);
+await saveBookingTosupabase(customerData, tripData);
 });
