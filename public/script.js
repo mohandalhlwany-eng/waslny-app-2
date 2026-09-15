@@ -200,30 +200,28 @@ async function      saveBookingToTosupabase(customerData, tripData) {
     }
 }
 
-document.getElementById('passenger-form').addEventListener('submit', async (e) => { e.preventDefault();
-// طلب البيانات الأساسية
-const cityFromEl = document.getElementById('cityFromSelect');
-const stationFromEl = document.getElementById('stationFromSelect');
-const fromValue = cityFromEl ? cityFromEl.value : (stationFromEl ? stationFromEl.value : '');
+document.getElementById('passenger-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // طلب البيانات الأساسية بالطريقة المباشرة والأمنة
+    const fromValue = document.getElementById('cityFromSelect')?.value || document.getElementById('stationFromSelect')?.value || '';
+    const toValue = document.getElementById('cityToSelect')?.valueasync (e) => {
+    e.preventDefault();
+    
+    // طلب ال'';
+    
+    const passengerName = document.getElementById('passenger-name')?.value || '';
+    const passengerPhone = document.getElementById('passenger-phone')?.value || '';
 
-const cityToEl = document.getElementById('cityToSelect');
-const stationToEl = document.getElementById('stationToSelect');
-const toValue = cityToEl ? cityToEl.value : (stationToEl ? stationToEl.value : '');
+    // تجهيز البيانات
+    const customerData = {
+        name: passengerName,
+        phone: passengerPhone
+    };
 
-const nameEl = document.getElementById('passenger-name');
-const phoneEl = document.getElementById('passenger-phone');
-const passengerName = nameEl ? nameEl.value : '';
-const passengerPhone = phoneEl ? phoneEl.value : '';
-
-// تجهيز البيانات
-const customerData = {
-    name: passengerName,
-    phone: passengerPhone
-};
-
-// تنفيذ الحفظ
-// تنفيذ الحفظ
+    // تنفيذ الحفظ
     await saveBookingToTosupabase(customerData, fromValue, toValue);
+});
 
 // دالة الحفظ لوحدها في الصافي وبراحتها
 async function saveBookingToTosupabase(customerData, fromVal, toVal) {
