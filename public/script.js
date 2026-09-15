@@ -228,5 +228,5 @@ const tripData = {
 };
 
 // إرسال البيانات لـ Supabase
-const { data, error } = await supabase.from('Trip').insert([{ user_id: 1, From_location: fromValue, To_location: toValue }]);
+const { data, error } = await supabase.from('Trip').insert([{ From_location: fromValue, To_location: toValue }]);
 });
