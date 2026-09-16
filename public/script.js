@@ -254,7 +254,3 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
     }
 }
 });
-function goBack(sectionId) {
-    document.querySelectorAll('div[id^="section-"]').forEach(s => s.classList.add('section-hidden'));
-    document.getElementById(sectionId)?.classList.remove('section-hidden');
-}
