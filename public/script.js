@@ -255,30 +255,34 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
 }
 });
 
-// مراقب عام لكل نقرات الموقع لضمان عمل جميع الأزرار للأبد بدون توقف
+// الحل النهائي المتوافق مع كلاسات active و hidden الأصلية
 document.addEventListener('click', function(event) {
-    
-    // 1. معالجة أزرار الرجوع (سواء بـ data-target أو onclick قديم)
     const backBtn = event.target.closest('.back-btn');
-    if (backBtn) {
-        event.preventDefault();
-        let targetId = backBtn.getAttribute('data-target');
+    if (!backBtn) return;
+    
+    event.preventDefault();
+    let targetId = backBtn.getAttribute('data-target');
+    
+    // استخراج الـ ID لو الزرار لسه بـ onclick القديم
+    if (!targetId && backBtn.getAttribute('onclick')) {
+        const match = backBtn.getAttribute('onclick').match(/'([^']+)'/);
+        if (match) targetId = match[1];
+    }
+
+    if (targetId) {
+        console.log("الرجوع إلى القسم:", targetId);
         
-        // لو الزرار لسه مكتوب بالطريقة القديمة onclick، هنطلع منه اسم القسم تلقائياً
-        if (!targetId && backBtn.getAttribute('onclick')) {
-            const match = backBtn.getAttribute('onclick').match(/'([^']+)'/);
-            if (match) targetId = match[1];
+        // إخفاء كل الأقسام بإضافة hidden وإزالة active
+        document.querySelectorAll('.section').forEach(sec => {
+            sec.classList.add('hidden');
+            sec.classList.remove('active');
+        });
+        
+        // إظهار القسم المطلوب بالطريقة الصح
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) {
+            targetSection.classList.remove('hidden');
+            targetSection.classList.add('active');
         }
-        if (targetId) {
-            console.log("الرجوع إلى القسم:", targetId);
-            document.querySelectorAll('[id^="section-"]').forEach(sec => {
-                sec.style.display = 'none';
-            });
-            const targetSection = document.getElementById(targetId);
-            if (targetSection) {
-                targetSection.style.display = 'block';
-            }
-        }
-        return;
     }
 });
