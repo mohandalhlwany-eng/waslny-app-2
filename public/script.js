@@ -254,15 +254,3 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
     }
 }
 });
-window.goBack = function(sectionId) {
-    // إخفاء كل الأقسام اللي فيها كلاس section أو تبدأ بـ section-
-    document.querySelectorAll('.section, [id^="section-"]').forEach(sec => {
-        sec.classList.add('section-hidden');
-    });
-    // إظهار القسم المحدد بشكل مؤكد وسلس
-    const target = document.getElementById(sectionId);
-    if (target) {
-        target.classList.remove('section-hidden');
-        target.style.display = 'block';
-    }
-};
