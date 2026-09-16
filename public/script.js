@@ -255,22 +255,26 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
 }
 });
 
-// تفعيل أزرار الرجوع فقط دون المساس بباقي أزرار الموقع
-document.querySelectorAll('.back-btn').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('data-target');
+// مراقب عام لكل نقرات الموقع لضمان عمل جميع الأزرار للأبد بدون توقف
+document.addEventListener('click', function(event) {
+    
+    // 1. لو المستخدم ضغط على زرار رجوع (.back-btn)
+    const backBtn = event.target.closest('.back-btn');
+    if (backBtn) {
+        const targetId = backBtn.getAttribute('data-target');
         console.log("الرجوع إلى القسم:", targetId);
         
-        // إخفاء كل الأقسام
         document.querySelectorAll('[id^="section-"]').forEach(sec => {
             sec.style.display = 'none';
         });
         
-        // إظهار القسم المطلوب
         const targetSection = document.getElementById(targetId);
         if (targetSection) {
             targetSection.style.display = 'block';
         }
-    });
+        return; // إيقاف التنفيذ عشان ميحصلش تداخل
+    }
+
+    // 2. لو عندك أزرار تانية في الموقع بتعلق، تقدر تحط الكلاسات بتاعتها هنا 
+    // وتكتب الأكواد بتاعتها بالطريقة الآمنة دي عشان تفضل شغال دايماً.
 });
