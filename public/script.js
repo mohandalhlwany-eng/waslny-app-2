@@ -255,19 +255,23 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
 }
 });
 
-window.goBack = function(sectionId) {
-    console.log("تم الضغط، الانتقال إلى قسم:", sectionId);
+document.addEventListener('click', function(event) {
+    const btn = event.target.closest('.back-btn');
+    if (!btn) return;
     
-    // إخفاء جميع الأقسام التي تبدأ بـ section-
+    const targetId = btn.getAttribute('data-target');
+    console.log("تم النقر على زر الرجوع للقسم:", targetId);
+    
+    // إخفاء كل الأقسام
     document.querySelectorAll('[id^="section-"]').forEach(sec => {
         sec.style.display = 'none';
     });
     
-    // إظهار القسم المطلوب فقط
-    const target = document.getElementById(sectionId);
+    // إظهار القسم المطلوب
+    const target = document.getElementById(targetId);
     if (target) {
         target.style.display = 'block';
     } else {
-        console.error("القسم غير موجود:", sectionId);
+        console.error("القسم غير موجود:", targetId);
     }
-};
+});
