@@ -254,3 +254,13 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
     }
 }
 });
+
+window.goBack = function(sectionId) {
+    document.querySelectorAll('.section').forEach(sec => {
+        sec.classList.add('section-hidden');
+    });
+    const target = document.getElementById(sectionId);
+    if (target) {
+        target.classList.remove('section-hidden');
+    }
+};
