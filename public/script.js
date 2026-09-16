@@ -256,11 +256,14 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
 });
 
 window.goBack = function(sectionId) {
+    console.log("تم الضغط، الانتقال إلى قسم:", sectionId);
     document.querySelectorAll('.section').forEach(sec => {
         sec.classList.add('section-hidden');
     });
     const target = document.getElementById(sectionId);
     if (target) {
         target.classList.remove('section-hidden');
+    } else {
+        console.error("القسم غير موجود في الصفحة:", sectionId);
     }
 };
