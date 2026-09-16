@@ -255,21 +255,18 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
 }
 });
 
-document.addEventListener('click', function(event) {
-    const btn = event.target.closest('.back-btn');
-    if (!btn) return;
-    
-    const targetId = btn.getAttribute('data-target');
-    console.log("تم النقر على زر الرجوع للقسم:", targetId);
-    
-    document.querySelectorAll('[id^="section-"]').forEach(sec => {
-        sec.style.display = 'none';
+document.querySelectorAll('.back-btn').forEach(btn => {
+    btn.addEventListener('click', function(event) {
+        const targetId = this.getAttribute('data-target');
+        console.log("الرجوع إلى القسم:", targetId);
+
+        document.querySelectorAll('[id^="section-"]').forEach(sec => {
+            sec.style.display = 'none';
+        });
+
+        const target = document.getElementById(targetId);
+        if (target) {
+            target.style.display = 'block';
+        }
     });
-    
-    const target = document.getElementById(targetId);
-    if (target) {
-        target.style.display = 'block';
-    } else {
-        console.error("القسم غير موجود:", targetId);
-    }
 });
