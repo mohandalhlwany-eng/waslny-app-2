@@ -262,12 +262,10 @@ document.addEventListener('click', function(event) {
     const targetId = btn.getAttribute('data-target');
     console.log("تم النقر على زر الرجوع للقسم:", targetId);
     
-    // إخفاء كل الأقسام
     document.querySelectorAll('[id^="section-"]').forEach(sec => {
         sec.style.display = 'none';
     });
     
-    // إظهار القسم المطلوب
     const target = document.getElementById(targetId);
     if (target) {
         target.style.display = 'block';
