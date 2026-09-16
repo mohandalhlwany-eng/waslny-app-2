@@ -258,23 +258,27 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
 // مراقب عام لكل نقرات الموقع لضمان عمل جميع الأزرار للأبد بدون توقف
 document.addEventListener('click', function(event) {
     
-    // 1. لو المستخدم ضغط على زرار رجوع (.back-btn)
+    // 1. معالجة أزرار الرجوع (سواء بـ data-target أو onclick قديم)
     const backBtn = event.target.closest('.back-btn');
     if (backBtn) {
-        const targetId = backBtn.getAttribute('data-target');
-        console.log("الرجوع إلى القسم:", targetId);
+        event.preventDefault();
+        let targetId = backBtn.getAttribute('data-target');
         
-        document.querySelectorAll('[id^="section-"]').forEach(sec => {
-            sec.style.display = 'none';
-        });
-        
-        const targetSection = document.getElementById(targetId);
-        if (targetSection) {
-            targetSection.style.display = 'block';
+        // لو الزرار لسه مكتوب بالطريقة القديمة onclick، هنطلع منه اسم القسم تلقائياً
+        if (!targetId && backBtn.getAttribute('onclick')) {
+            const match = backBtn.getAttribute('onclick').match(/'([^']+)'/);
+            if (match) targetId = match[1];
         }
-        return; // إيقاف التنفيذ عشان ميحصلش تداخل
+        if (targetId) {
+            console.log("الرجوع إلى القسم:", targetId);
+            document.querySelectorAll('[id^="section-"]').forEach(sec => {
+                sec.style.display = 'none';
+            });
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+        }
+        return;
     }
-
-    // 2. لو عندك أزرار تانية في الموقع بتعلق، تقدر تحط الكلاسات بتاعتها هنا 
-    // وتكتب الأكواد بتاعتها بالطريقة الآمنة دي عشان تفضل شغال دايماً.
 });
