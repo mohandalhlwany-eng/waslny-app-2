@@ -257,13 +257,17 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
 
 window.goBack = function(sectionId) {
     console.log("تم الضغط، الانتقال إلى قسم:", sectionId);
-    document.querySelectorAll('.section').forEach(sec => {
-        sec.classList.add('section-hidden');
+    
+    // إخفاء جميع الأقسام التي تبدأ بـ section-
+    document.querySelectorAll('[id^="section-"]').forEach(sec => {
+        sec.style.display = 'none';
     });
+    
+    // إظهار القسم المطلوب فقط
     const target = document.getElementById(sectionId);
     if (target) {
-        target.classList.remove('section-hidden');
+        target.style.display = 'block';
     } else {
-        console.error("القسم غير موجود في الصفحة:", sectionId);
+        console.error("القسم غير موجود:", sectionId);
     }
 };
