@@ -255,18 +255,22 @@ async function saveBookingToTosupabase(customerData, fromVal, toVal) {
 }
 });
 
-document.querySelectorAll('.back-btn').forEach(btn => {
-    btn.addEventListener('click', function(event) {
+// تفعيل أزرار الرجوع فقط دون المساس بباقي أزرار الموقع
+document.querySelectorAll('.back-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
         const targetId = this.getAttribute('data-target');
         console.log("الرجوع إلى القسم:", targetId);
-
+        
+        // إخفاء كل الأقسام
         document.querySelectorAll('[id^="section-"]').forEach(sec => {
             sec.style.display = 'none';
         });
-
-        const target = document.getElementById(targetId);
-        if (target) {
-            target.style.display = 'block';
+        
+        // إظهار القسم المطلوب
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) {
+            targetSection.style.display = 'block';
         }
     });
 });
