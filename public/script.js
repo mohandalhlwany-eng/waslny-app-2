@@ -1,8 +1,16 @@
 // ==========================================
-// البيانات والدوال الأساسية (Data & Logic)
+// 0. ربط Supabase (في أول الملف)
+// ==========================================
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+const supabaseUrl = 'https://ififfcevzgrhygiqcqfo.supabase.co'
+const supabaseKey = 'sb_publishable_uRpGBwNOk32ehkutQFbMpQ_bTk9Ix8Z'
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// ==========================================
+// 1. البيانات والدوال الأساسية (Data & Logic)
 // ==========================================
 
-// بيانات المدن والمحطات المترتبطة بها حسب طلبك بالضبط
 const locations = {
     "المنصورة": ["الجمالية", "ميت سلسيل", "الرياض", "ميت عاصم", "منية النصر", "دكرنس", "كفر القباب", "المنصورة الاستاد", "المنصورة سندوب", "منية سندوب", "ميت معاند", "أجا", "كفر عوض", "فيشا", "بشلا", "كوبري ابو نبهان ميت غمر", "كوبري دقادوس ميت غمر", "كوبري البراميل ميت غمر", "كوبري صهرجت الكبرى"],
     "الشرقية": ["بلبيس", "الزقازيق", "ههيا", "ابو كبير", "فاقوس"],
@@ -16,6 +24,8 @@ const locations = {
     "المنيا": ["المدينة الجامعية للبنات في المنيا"]
 };
 
+const mainHubs = ["بني سويف", "المنيا"]; // المحافظات الأساسية (المحاور)
+
 // عناصر الـ DOM
 const cityFromSelect = document.getElementById('city-from');
 const stationFromSelect = document.getElementById('station-from');
@@ -23,8 +33,10 @@ const cityToSelect = document.getElementById('city-to');
 const stationToSelect = document.getElementById('station-to');
 const btnShowTrips = document.getElementById('btn-show-trips');
 
-// ملء قائمة المدن
+// ملء قائمة المدن عند البداية
 function populateCities() {
+    cityFromSelect.innerHTML = '<option value="" disabled selected>اختر المدينة</option>';
+    cityToSelect.innerHTML = '<option value="" disabled selected>اختر المدينة</option>';
     const cities = Object.keys(locations);
     cities.forEach(city => {
         cityFromSelect.add(new Option(city, city));
@@ -32,7 +44,7 @@ function populateCities() {
     });
 }
 
-// تحديث المحطات بناءً على المدينة المختارة
+// تحديث المحطات
 function updateStations(citySelect, stationSelect) {
     stationSelect.innerHTML = '<option value="" disabled selected>اختر المحطة</option>';
     const selectedCity = citySelect.value;
@@ -43,15 +55,55 @@ function updateStations(citySelect, stationSelect) {
     }
 }
 
-// الأحداث (Event Listeners)
-cityFromSelect.addEventListener('change', () => updateStations(cityFromSelect, stationFromSelect));
-cityToSelect.addEventListener('change', () => updateStations(cityToSelect, stationToSelect));
+// دالة الفلترة الذكية (لإجبار اختيار بني سويف أو المنيا كطرف أساسي)
+function filterCounterpart(sourceSelect, targetSelect, targetStationSelect) {
+    const selectedVal = sourceSelect.value;
+    const currentTargetVal = targetSelect.value;
+    
+    targetSelect.innerHTML = '<option value="" disabled selected>اختر المدينة</option>';
+    
+    if (!selectedVal) return;
+
+    const cities = Object.keys(locations);
+    
+    if (mainHubs.includes(selectedVal)) {
+        // لو اختار بني سويف أو المنيا -> الناحية التانية تظهر باقي المحافظات فقط
+        cities.forEach(city => {
+            if (!mainHubs.includes(city)) {
+                targetSelect.add(new Option(city, city));
+            }
+        });
+    } else {
+        // لو اختار محافظة تانية -> الناحية التانية تكون إجباري بني سويف أو المنيا
+        mainHubs.forEach(hub => {
+            targetSelect.add(new Option(hub, hub));
+        });
+    }
+
+    const optionExists = Array.from(targetSelect.options).some(opt => opt.value === currentTargetVal);
+    if (optionExists && currentTargetVal !== "") {
+        targetSelect.value = currentTargetVal;
+    } else {
+        targetStationSelect.innerHTML = '<option value="" disabled selected>اختر المحطة</option>';
+    }
+}
+
+// الأحداث (Event Listeners) للمدن
+cityFromSelect.addEventListener('change', () => {
+    updateStations(cityFromSelect, stationFromSelect);
+    filterCounterpart(cityFromSelect, cityToSelect, stationToSelect);
+});
+
+cityToSelect.addEventListener('change', () => {
+    updateStations(cityToSelect, stationToSelect);
+    filterCounterpart(cityToSelect, cityFromSelect, stationFromSelect);
+});
 
 // تهيئة المدن عند بدء التشغيل
 populateCities();
 
 // ==========================================
-// نظام التنقل بين الصفحات (SPA Navigation)
+// 2. نظام التنقل بين الصفحات (SPA Navigation)
 // ==========================================
 function switchSection(targetSectionId) {
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -59,31 +111,23 @@ function switchSection(targetSectionId) {
     window.scrollTo(0, 0);
 }
 
-function goBack(targetSectionId) {
-    switchSection(targetSectionId);
-}
-
 // ==========================================
-// 1. عرض الرحلات
+// 3. عرض الرحلات
 // ==========================================
 btnShowTrips.addEventListener('click', () => {
-    // التحقق من اختيار جميع الخانات
     if (!cityFromSelect.value || !stationFromSelect.value || !cityToSelect.value || !stationToSelect.value) {
         alert("برجاء اختيار المدينة والمحطة لجهتي السفر والوصول أولاً.");
         return;
     }
-
     generateTrips();
     switchSection('section-trips');
 });
 
 function generateTrips() {
     const tripsList = document.getElementById('trips-list');
-    tripsList.innerHTML = ''; // مسح القديم
+    tripsList.innerHTML = ''; 
 
-    // إنشاء 4 رحلات بأوقات مختلفة بصيغة 12 ساعة
     const times = ["08:00 ص", "11:30 ص", "02:15 م", "06:00 م"];
-    
     times.forEach(time => {
         const tripHTML = `
             <div class="trip-card">
@@ -105,13 +149,44 @@ window.selectTrip = function() {
 }
 
 // ==========================================
-// 2. التحقق من البيانات والانتقال للدفع
+// 4. التحقق من البيانات وإرسالها لـ Supabase
 // ==========================================
 const passengerForm = document.getElementById('passenger-form');
 const phoneInput = document.getElementById('passenger-phone');
 const phoneError = document.getElementById('phone-error');
 
-passengerForm.addEventListener('submit', (e) => {
+// دالة الحفظ الموحدة في Supabase
+async function saveBookingToSupabase(customerData, fromVal, toVal) {
+    // 1. تسجيل المستخدم أولاً في جدول users
+    const { data: userData, error: userError } = await supabase
+        .from('users')
+        .insert([{ name: customerData.name, phone: customerData.phone }])
+        .select();
+
+    if (userError) {
+        console.error('خطأ في حفظ المستخدم:', userError.message);
+        return;
+    }
+    
+    const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
+    
+    // 2. تجهيز بيانات الرحلة مع user_id الحقيقي
+    const tripData = {
+        user_id: newUserId,
+        From_location: fromVal,
+        To_location: toVal
+    };
+    
+    // 3. إرسال الرحلة لجدول Trip
+    const { data, error } = await supabase.from('Trip').insert([tripData]);
+    if (error) {
+        console.error('خطأ في حفظ الرحلة:', error.message);
+    } else {
+        console.log('تم الحجز وحفظ البيانات بنجاح في قاعدة البيانات', data);
+    }
+}
+
+passengerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const phoneVal = phoneInput.value;
@@ -122,12 +197,25 @@ passengerForm.addEventListener('submit', (e) => {
         return;
     }
     phoneError.style.display = 'none';
+
+    const passengerName = document.getElementById('passenger-name').value;
+    const passengerPhone = phoneInput.value;
+    
+    const fromValue = `${cityFromSelect.value} - ${stationFromSelect.value}`;
+    const cityToVal = cityToSelect ? cityToSelect.value : '';
+    const stationToVal = stationToSelect ? stationToSelect.value : '';
+    const toValue = `${cityToVal} - ${stationToVal}`;
+
+    const customerData = { name: passengerName, phone: passengerPhone };
+
+    // تنفيذ الحفظ
+    await saveBookingToSupabase(customerData, fromValue, toValue);
     
     switchSection('section-payment-method');
 });
 
 // ==========================================
-// 3. اختيار طريقة الدفع
+// 5. اختيار طريقة الدفع وتفاصيلها
 // ==========================================
 const paymentRadios = document.querySelectorAll('input[name="payment-method"]');
 const btnProceedPayment = document.getElementById('btn-proceed-payment');
@@ -145,12 +233,8 @@ btnProceedPayment.addEventListener('click', () => {
     switchSection('section-payment-details');
 });
 
-// ==========================================
-// 4. تفاصيل الدفع النهائية
-// ==========================================
 function renderPaymentDetails(method) {
     const dynamicInfo = document.getElementById('dynamic-payment-info');
-    
     if (method === 'vodafone') {
         dynamicInfo.innerHTML = `
             <div class="payment-details-text">
@@ -173,89 +257,10 @@ function renderPaymentDetails(method) {
         `;
     }
 }
-// -----------------------------------------
-// ربط Supabase وإرسال بيانات الحجز
-// -----------------------------------------
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-const supabaseUrl = 'https://ififfcevzgrhygiqcqfo.supabase.co'
-const supabaseKey = 'sb_publishable_uRpGBwNOk32ehkutQFbMpQ_bTk9Ix8Z'
-
-const supabase = createClient(supabaseUrl, supabaseKey)
-
-async function      saveBookingToTosupabase(customerData, tripData) {
-    const { data, error } = await supabase
-        .from('Trip')
-        .insert([
-            {
-                user_id: customerData.id,
-                From_location: tripData.from,
-                To_location: tripData.to
-            }
-        ]);
-    if (error) {
-        console.error('خطأ في الحفظ:', error.message);
-    } else {
-        console.log('تم الحفظ بنجاح', data);
-    }
-}
-
-document.getElementById('passenger-form').addEventListener('submit', async (e) => { e.preventDefault();
-// طلب البيانات الأساسية
-const cityFromEl = document.getElementById('cityFromSelect');
-const stationFromEl = document.getElementById('stationFromSelect');
-const fromValue = cityFromEl ? cityFromEl.value : (stationFromEl ? stationFromEl.value : '');
-
-const cityToEl = document.getElementById('cityToSelect');
-const stationToEl = document.getElementById('stationToSelect');
-const toValue = cityToEl ? cityToEl.value : (stationToEl ? stationToEl.value : '');
-
-const nameEl = document.getElementById('passenger-name');
-const phoneEl = document.getElementById('passenger-phone');
-const passengerName = nameEl ? nameEl.value : '';
-const passengerPhone = phoneEl ? phoneEl.value : '';
-
-// تجهيز البيانات
-const customerData = {
-    name: passengerName,
-    phone: passengerPhone
-};
-
-// تنفيذ الحفظ
-// تنفيذ الحفظ
-    await saveBookingToTosupabase(customerData, fromValue, toValue);
-
-// دالة الحفظ لوحدها في الصافي وبراحتها
-async function saveBookingToTosupabase(customerData, fromVal, toVal) {
-    // 1. تسجيل المستخدم أولاً عشان نطلع الـ id
-    const { data: userData, error: userError } = await supabase
-        .from('users')
-        .insert([
-            { name: customerData.name, phone: customerData.phone }
-        ])
-        .select();
-    if (userError) {
-        console.error('خطأ في حفظ المستخدم:', userError.message);
-        return;
-    }
-    const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
-    // 2. تجهيز الـ tripData مع الـ user_id الحقيقي
-    const tripData = {
-        user_id: newUserId,
-        From_location: fromVal,
-        To_location: toVal
-    };
-    // ده سطر الإرسال بتاعك اللي بتحبه
-    const { data, error } = await supabase.from('Trip').insert([tripData]);
- if (error) {
-        console.error('خطأ في حفظ الرحلة:', error.message);
-    } else {
-        console.log('تم الحجز بنجاح', data);
-    }
-}
-});
-
-// الحل النهائي المتوافق مع كلاسات active و hidden الأصلية
+// ==========================================
+// 6. الحل النهائي الشامل لأزرار الرجوع (Event Delegation)
+// ==========================================
 document.addEventListener('click', function(event) {
     const backBtn = event.target.closest('.back-btn');
     if (!backBtn) return;
@@ -263,26 +268,21 @@ document.addEventListener('click', function(event) {
     event.preventDefault();
     let targetId = backBtn.getAttribute('data-target');
     
-    // استخراج الـ ID لو الزرار لسه بـ onclick القديم
     if (!targetId && backBtn.getAttribute('onclick')) {
         const match = backBtn.getAttribute('onclick').match(/'([^']+)'/);
         if (match) targetId = match[1];
     }
 
     if (targetId) {
-        console.log("الرجوع إلى القسم:", targetId);
-        
-        // إخفاء كل الأقسام بإضافة hidden وإزالة active
         document.querySelectorAll('.section').forEach(sec => {
             sec.classList.add('hidden');
             sec.classList.remove('active');
         });
-        
-        // إظهار القسم المطلوب بالطريقة الصح
         const targetSection = document.getElementById(targetId);
         if (targetSection) {
             targetSection.classList.remove('hidden');
             targetSection.classList.add('active');
+            window.scrollTo(0, 0);
         }
     }
 });
