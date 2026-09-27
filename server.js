@@ -151,3 +151,40 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`✅ Secure Server is running on port ${PORT}`);
 });
+
+// مسار التعديل
+app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const { data, error } = await supabase
+            .from('users')
+            .update({ status })
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: "تم تحديث الحالة بنجاح", data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "خطأ أثناء التحديث" });
+    }
+});
+
+// مسار الحذف
+app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { error } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: "تم الحذف بنجاح" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "خطأ أثناء الحذف" });
+    }
+});
