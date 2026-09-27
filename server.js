@@ -58,7 +58,7 @@ const isAdmin = async (req, res, next) => {
 
         const token = authHeader.split(' ')[1];
         
-        // لو التوكن هو التوكن المباشر الخاص بالأدمن
+        // لو التوكن هو التوكن السري، اسمح بالدخول فوراً واخرج من الدالة بدون الذهاب لـ Supabase
         if (token === 'admin-secret-token-waslni-2026') {
             req.user = { email: 'mohandalhlwany@waslni.com', role: 'admin' };
             return next();
@@ -66,12 +66,12 @@ const isAdmin = async (req, res, next) => {
 
         const { data: { user }, error } = await supabase.auth.getUser(token);
         if (error || !user) {
-            return res.status(401).json({ message: "انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً" });
+            return res.status(401).json({ message: "انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجددا" });
         }
 
         const isAdminUser = (user.email === 'mohandalhlwany@waslni.com') || (user.user_metadata?.role === 'admin');
         if (!isAdminUser) {
-            return res.status(403).json({ message: "عفواً، لا تملك صلاحيات للوصول إلى لوحة الإدارة" });
+            return res.status(403).json({ message: "عفواً، لا تملك صلاحيات الوصول إلى لوحة الإدارة" });
         }
 
         req.user = user;
