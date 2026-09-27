@@ -8,9 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="style.css">
-<link rel="icon" type="image/png" href="logo.png">
-</head>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
     <!-- خلفية الموقع الثابتة -->
@@ -25,6 +24,12 @@
         <!-- الصفحة الرئيسية (الحجز والتواصل) -->
         <!-- ============================================== -->
         <div id="section-home" class="section active">
+            
+            <!-- زر النمط الليلي في الصفحة الرئيسية (فوق يمين) -->
+            <button class="dark-mode-toggle main-dark-btn" aria-label="النمط الليلي">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
             <!-- مسافة شفافة علشان نسيب الجملة اللي في الخلفية تبان -->
             <div class="spacer"></div>
 
@@ -73,6 +78,13 @@
                     <a href="https://www.instagram.com/waslnisaree?stkn=YjFqNmpybzMzZHFt&utm_source=qr" target="_blank" class="icon ig"><i class="fa-brands fa-instagram"></i></a>
                     <a href="https://wa.me/message/O4DNU6GFS2UPM1" target="_blank" class="icon wa"><i class="fa-brands fa-whatsapp"></i></a>
                 </div>
+                
+                <!-- روابط سياسة الخصوصية والشروط والأحكام -->
+                <div class="legal-links">
+                    <a href="#" onclick="switchSection('section-privacy'); return false;">سياسة الخصوصية</a>
+                    <span>|</span>
+                    <a href="#" onclick="switchSection('section-terms'); return false;">الشروط والأحكام</a>
+                </div>
             </div>
         </div>
 
@@ -80,7 +92,10 @@
         <!-- صفحة عرض الرحلات المتاحة -->
         <!-- ============================================== -->
         <div id="section-trips" class="section hidden">
-            <button class="back-btn" data-target="section-home"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+            <div class="header-with-back">
+                <button class="back-btn" data-target="section-home"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+                <button class="dark-mode-toggle inner-dark-btn" aria-label="النمط الليلي"><i class="fa-solid fa-moon"></i></button>
+            </div>
             <div class="white-box trips-container">
                 <h2 class="box-title">الرحلات المتاحة</h2>
                 <div id="trips-list">
@@ -93,7 +108,10 @@
         <!-- صفحة إدخال البيانات -->
         <!-- ============================================== -->
         <div id="section-data" class="section hidden">
-            <button class="back-btn" data-target="section-trips"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+            <div class="header-with-back">
+                <button class="back-btn" data-target="section-trips"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+                <button class="dark-mode-toggle inner-dark-btn" aria-label="النمط الليلي"><i class="fa-solid fa-moon"></i></button>
+            </div>
             <div class="white-box form-box">
                 <h2 class="box-title">بيانات المسافر</h2>
                 <form id="passenger-form">
@@ -115,7 +133,10 @@
         <!-- صفحة اختيار طريقة الدفع -->
         <!-- ============================================== -->
         <div id="section-payment-method" class="section hidden">
-            <button class="back-btn" data-target="section-data"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+            <div class="header-with-back">
+                <button class="back-btn" data-target="section-data"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+                <button class="dark-mode-toggle inner-dark-btn" aria-label="النمط الليلي"><i class="fa-solid fa-moon"></i></button>
+            </div>
             <div class="white-box payment-box">
                 <h2 class="box-title">اختر طريقة الدفع</h2>
                 
@@ -125,7 +146,6 @@
                         <div class="card-content">
                             <span class="pay-name">محفظة الكترونية (فودافون كاش)</span>
                             <span class="pay-en">Vodafone Cash</span>
-                            <!-- ايقونة تعبيرية مؤقتة مكان اللوجو -->
                             <i class="fa-solid fa-wallet pay-icon vf"></i>
                         </div>
                     </label>
@@ -148,10 +168,12 @@
         <!-- صفحة تفاصيل الدفع (النهائية) -->
         <!-- ============================================== -->
         <div id="section-payment-details" class="section hidden">
-            <button class="back-btn" data-target="section-payment-method"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+            <div class="header-with-back">
+                <button class="back-btn" data-target="section-payment-method"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+                <button class="dark-mode-toggle inner-dark-btn" aria-label="النمط الليلي"><i class="fa-solid fa-moon"></i></button>
+            </div>
             <div class="white-box final-box">
                 
-                <!-- هذا الجزء سيتغير بناء على اختيار فودافون او انستاباي -->
                 <div id="dynamic-payment-info"></div>
 
                 <div class="whatsapp-upload">
@@ -171,6 +193,46 @@
 
                 <div class="thank-you-msg">
                     شكراً لحجزك معنا في وصلني ع السريع سيتم الرد عليك في اسرع وقت
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- صفحة سياسة الخصوصية -->
+        <!-- ============================================== -->
+        <div id="section-privacy" class="section hidden">
+            <div class="header-with-back">
+                <button class="back-btn" data-target="section-home"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+                <button class="dark-mode-toggle inner-dark-btn" aria-label="النمط الليلي"><i class="fa-solid fa-moon"></i></button>
+            </div>
+            <div class="white-box">
+                <h2 class="box-title">سياسة الخصوصية</h2>
+                <div class="legal-content">
+                    <p>نحن في <b>"وصلني على السريع"</b> نقدر خصوصيتك. يتم جمع بعض البيانات الأساسية مثل (الاسم، ورقم الهاتف) لغرض تأكيد الحجز وإرسال تفاصيل الرحلة فقط.</p>
+                    <br>
+                    <p>نلتزم بعدم مشاركة أو بيع بياناتك لأي أطراف خارجية. كما نضمن حماية معلومات الدفع الخاصة بك وتأمينها بالكامل.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- صفحة الشروط والأحكام -->
+        <!-- ============================================== -->
+        <div id="section-terms" class="section hidden">
+            <div class="header-with-back">
+                <button class="back-btn" data-target="section-home"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+                <button class="dark-mode-toggle inner-dark-btn" aria-label="النمط الليلي"><i class="fa-solid fa-moon"></i></button>
+            </div>
+            <div class="white-box">
+                <h2 class="box-title">الشروط والأحكام</h2>
+                <div class="legal-content">
+                    <ul>
+                        <li>يجب التواجد في محطة الركوب قبل موعد الرحلة بـ 15 دقيقة على الأقل.</li>
+                        <li>لا يتم تأكيد الحجز إلا بعد إتمام عملية الدفع ورفع صورة التحويل (إسكرين الدفع).</li>
+                        <li>في حالة الإلغاء قبل الرحلة بـ 24 ساعة، يتم استرداد المبلغ بالكامل.</li>
+                        <li>في حالة التأخير عن الموعد المحدد للتحرك، لا يحق للراكب استرداد قيمة التذكرة.</li>
+                        <li>الشركة غير مسؤولة عن فقدان الأمتعة الشخصية الخفيفة داخل السيارة.</li>
+                    </ul>
                 </div>
             </div>
         </div>
