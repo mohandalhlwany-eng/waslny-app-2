@@ -12,8 +12,7 @@ const PORT = process.env.PORT || 3000;
 // ==========================================
 // 🗄️ إعداد قاعدة بيانات Supabase
 // ==========================================
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
+const supabase = createClient('https://ififfcevzgrhygiqcqfo.supabase.co', 'sb_publishable_uRpGBwNOk32ehkutQFbmPQ_bTk9Ix8Z');
 // ==========================================
 // 🛡 Security Middlewares (حماية من الثغرات)
 // ==========================================
