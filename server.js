@@ -10,14 +10,15 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // ==========================================
-// 🗄 إعداد قاعدة بيانات Supabase
+// 🗄 إعداد قاعدة بيانات Supabase (المفاتيح المصححة بدقة)
 // ==========================================
-const supabase = createClient('https://ififfcevzgrhygiqcqfo.supabase.co', 'sb_publishable_uRpGBwNOk32ehkutQFbmPQ_bTk9Ix8Z');
-// ==========================================
-// 🛡 Security Middlewares (حماية من الثغرات)
-// ==========================================
+const SUPABASE_URL = 'https://ififfcevzgrhygiqcqfo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_uRpGBwNOk32ehkutQFbmPQ_bTk9Ix8Z';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 1. Helmet: تأمين الهيدرز الخاصة بالسيرفر لمنع ثغرات XSS و Clickjacking وغيرها
+// ==========================================
+// 🛡 Security Middlewares
+// ==========================================
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -26,35 +27,27 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
             imgSrc: ["'self'", "data:", "https://*"],
-            // تم السماح بالاتصالات الخارجية لدعم Supabase ودومين الأدمن الفرعي
             connectSrc: ["'self'", "https://*.supabase.co"],
         },
     },
     crossOriginEmbedderPolicy: false,
 }));
 
-// 2. Rate Limiting: حماية من هجمات الـ DDoS والـ Brute Force
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 دقيقة
-    max: 100, // الحد الأقصى 100 طلب من نفس الـ IP
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: "تم تجاوز الحد المسموح من الطلبات، يرجى المحاولة لاحقاً.",
     standardHeaders: true,
     legacyHeaders: false,
 });
 app.use(limiter);
-
-// 3. CORS: تحديد من يمكنه الوصول للـ API (يسمح لدومين الأدمن بالاتصال)
 app.use(cors());
 
-// ==========================================
-// ⚙️ App Configuration
-// ==========================================
-app.use(express.json({ limit: '10kb' })); // حماية من هجمات الـ Payload الكبير
+app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-
 // ==========================================
-// 👑 كود الحماية الخاص بمديري النظام (isAdmin Middleware)
+// 👑 كود الحماية (isAdmin Middleware)
 // ==========================================
 const isAdmin = async (req, res, next) => {
     try {
@@ -69,7 +62,6 @@ const isAdmin = async (req, res, next) => {
             return res.status(401).json({ message: "انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً" });
         }
 
-        // السماح للأدمن إما بالإيميل مباشرة أو بالـ Metadata
         const isAdminUser = (user.email === 'mohandalhlwany@waslni.com') || (user.user_metadata?.role === 'admin');
         if (!isAdminUser) {
             return res.status(403).json({ message: "عفواً، لا تملك صلاحيات للوصول إلى لوحة الإدارة" });
@@ -83,22 +75,21 @@ const isAdmin = async (req, res, next) => {
     }
 };
 
-
 // ==========================================
 // 🚀 مسارات لوحة الإدارة (Admin API Routes)
 // ==========================================
-
-// أ) مسار تسجيل دخول الأدمن
 app.post('/api/admin/login', async (req, res) => {
     const { email, password } = req.body;
+    console.log("Login attempt received for email:", email);
+    
     try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         
         if (error) {
+            console.error("Supabase Auth Error details:", error.message);
             return res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
         }
 
-        // التحقق من الإيميل المباشر أو الـ Role
         const isAuthorizedAdmin = (data.user.email === 'mohandalhlwany@waslni.com') || (data.user.user_metadata?.role === 'admin');
         if (!isAuthorizedAdmin) {
             return res.status(403).json({ message: "هذا الحساب ليس لديه صلاحيات الإدارة" });
@@ -110,12 +101,11 @@ app.post('/api/admin/login', async (req, res) => {
             user: { email: data.user.email, role: 'admin' }
         });
     } catch (err) {
-        console.error("Login Error:", err);
+        console.error("Login Server Exception:", err);
         res.status(500).json({ message: "حدث خطأ داخلي في السيرفر" });
     }
 });
 
-// ب) مسار جلب الحجوزات للأدمن (محمي بدالة isAdmin)
 app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -141,25 +131,18 @@ app.get('/api/admin/bookings', isAdmin, async (req, res) => {
         }));
 
         res.json(formattedData);
-} catch (err) {
-    console.error("Fetch Bookings Error:", err);
-
+    } catch (err) {
+        console.error("Fetch Bookings Error:", err);
         res.status(500).json({ message: "حدث خطأ أثناء جلب الحجوزات" });
     }
 });
 
-
-// ==========================================
-// 🌐 مسارات الواجهة الأمامية للموقع الأساسي
-// ==========================================
 app.use(express.static(path.join(__dirname, 'public')));
 
-// مسار افتراضي للتعامل مع أي طلب وتوجيهه للصفحة الرئيسية (SPA)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// تشغيل السيرفر
 app.listen(PORT, () => {
     console.log(`✅ Secure Server is running on port ${PORT}`);
 });
