@@ -8,9 +8,8 @@ const supabaseKey = 'sb_publishable_uRpGBwNOk32ehkutQFbMpQ_bTk9Ix8Z'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 // ==========================================
-// 1. البيانات والدوال الأساسية (Data & Logic)
+// 1. خريطة المدن والمحطات
 // ==========================================
-
 const locations = {
     "المنصورة": ["الجمالية", "ميت سلسيل", "الرياض", "ميت عاصم", "منية النصر", "دكرنس", "كفر القباب", "المنصورة الاستاد", "المنصورة سندوب", "منية سندوب", "ميت معاند", "أجا", "كفر عوض", "فيشا", "بشلا", "كوبري ابو نبهان ميت غمر", "كوبري دقادوس ميت غمر", "كوبري البراميل ميت غمر", "كوبري صهرجت الكبرى"],
     "الشرقية": ["بلبيس", "الزقازيق", "ههيا", "ابو كبير", "فاقوس"],
@@ -24,9 +23,61 @@ const locations = {
     "المنيا": ["المدينة الجامعية للبنات في المنيا"]
 };
 
-const mainHubs = ["بني سويف", "المنيا"]; // المحافظات الأساسية (المحاور)
+const mainHubs = ["بني سويف", "المنيا"];
 
-// عناصر الـ DOM
+// ==========================================
+// 🔴 جدول تعديل الرحلات المخصصة (عدل وأضف براحتك هنا)
+// ==========================================
+const customTrips = [
+    // --- مثال 1: رحلة من المنصورة إلى بني سويف ---
+    {
+        fromCity: "المنصورة",
+        toCity: "بني سويف",
+        time: "08:00 ص",
+        price: "355",
+        days: "يومياً"
+    },
+    {
+        fromCity: "المنصورة",
+        toCity: "بني سويف",
+        time: "11:30 ص",
+        price: "355",
+        days: "يومياً"
+    },
+
+    // --- مثال 2: رحلة من بني سويف إلى المنصورة ---
+    {
+        fromCity: "بني سويف",
+        toCity: "المنصورة",
+        time: "02:00 م",
+        price: "355",
+        days: "السبت والأحد"
+    },
+
+    // --- مثال 3: رحلة من الشرقية إلى بني سويف ---
+    {
+        fromCity: "الشرقية",
+        toCity: "بني سويف",
+        time: "09:00 ص",
+        price: "300",
+        days: "طوال الأسبوع"
+    }
+
+    // 💡 يمكنك إضافة أي رحلة جديدة هنا بنفس الشكل:
+    /*
+    ,{
+        fromCity: "اسم المدينة من",
+        toCity: "اسم المدينة إلى",
+        time: "الموعد",
+        price: "السعر",
+        days: "أيام الرحلة"
+    }
+    */
+];
+
+// ==========================================
+// 2. العناصر والدوال الأساسية للواجهة
+// ==========================================
 const cityFromSelect = document.getElementById('city-from');
 const stationFromSelect = document.getElementById('station-from');
 const cityToSelect = document.getElementById('city-to');
@@ -55,7 +106,7 @@ function updateStations(citySelect, stationSelect) {
     }
 }
 
-// دالة الفلترة الذكية (لإجبار اختيار بني سويف أو المنيا كطرف أساسي)
+// الفلترة الذكية (لإجبار اختيار بني سويف أو المنيا كطرف أساسي)
 function filterCounterpart(sourceSelect, targetSelect, targetStationSelect) {
     const selectedVal = sourceSelect.value;
     const currentTargetVal = targetSelect.value;
@@ -67,14 +118,12 @@ function filterCounterpart(sourceSelect, targetSelect, targetStationSelect) {
     const cities = Object.keys(locations);
     
     if (mainHubs.includes(selectedVal)) {
-        // لو اختار بني سويف أو المنيا -> الناحية التانية تظهر باقي المحافظات فقط
         cities.forEach(city => {
             if (!mainHubs.includes(city)) {
                 targetSelect.add(new Option(city, city));
             }
         });
     } else {
-        // لو اختار محافظة تانية -> الناحية التانية تكون إجباري بني سويف أو المنيا
         mainHubs.forEach(hub => {
             targetSelect.add(new Option(hub, hub));
         });
@@ -99,11 +148,11 @@ cityToSelect.addEventListener('change', () => {
     filterCounterpart(cityToSelect, cityFromSelect, stationFromSelect);
 });
 
-// تهيئة المدن عند بدء التشغيل
+// تهيئة القوائم عند التحميل
 populateCities();
 
 // ==========================================
-// 2. نظام التنقل بين الصفحات (SPA Navigation)
+// 3. التنقل بين الصفحات (SPA Navigation)
 // ==========================================
 function switchSection(targetSectionId) {
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -112,7 +161,7 @@ function switchSection(targetSectionId) {
 }
 
 // ==========================================
-// 3. عرض الرحلات
+// 4. عرض الرحلات المخصصة (Dynamically Generated)
 // ==========================================
 btnShowTrips.addEventListener('click', () => {
     if (!cityFromSelect.value || !stationFromSelect.value || !cityToSelect.value || !stationToSelect.value) {
@@ -127,16 +176,37 @@ function generateTrips() {
     const tripsList = document.getElementById('trips-list');
     tripsList.innerHTML = ''; 
 
-    const times = ["08:00 ص", "11:30 ص", "02:15 م", "06:00 م"];
-    times.forEach(time => {
+    const selectedFromCity = cityFromSelect.value;
+    const selectedToCity = cityToSelect.value;
+
+    // تصفية الرحلات المخصصة المتاحة بين المدينتين المحددتين
+    const matchingTrips = customTrips.filter(trip => 
+        trip.fromCity === selectedFromCity && trip.toCity === selectedToCity
+    );
+
+    // حالة عدم وجود رحلات
+    if (matchingTrips.length === 0) {
+        tripsList.innerHTML = `
+            <div style="text-align: center; padding: 35px 15px; color: #666; font-size: 16px; background: #fff; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                لا توجد رحلات متاحة حالياً من <b>${selectedFromCity}</b> إلى <b>${selectedToCity}</b>.
+            </div>
+        `;
+        return;
+    }
+
+    // عرض الرحلات المطابقة فقط
+    matchingTrips.forEach(trip => {
         const tripHTML = `
             <div class="trip-card">
-                <div class="trip-price">355 <span>جنية</span></div>
+                <div class="trip-price">${trip.price} <span>جنية</span></div>
                 <div class="trip-route">
                     السفر من ${stationFromSelect.value} <br>
                     إلى ${stationToSelect.value}
                 </div>
-                <div class="trip-time">${time}</div>
+                <div class="trip-time">
+                    🕒 ${trip.time}
+                    ${trip.days ? `<div style="font-size: 13px; color: #666; margin-top: 4px;">📅 ${trip.days}</div>` : ''}
+                </div>
                 <button class="btn-select-trip" onclick="selectTrip()">اختر الرحلة</button>
             </div>
         `;
@@ -149,15 +219,13 @@ window.selectTrip = function() {
 }
 
 // ==========================================
-// 4. التحقق من البيانات وإرسالها لـ Supabase
+// 5. حفظ البيانات في Supabase
 // ==========================================
 const passengerForm = document.getElementById('passenger-form');
 const phoneInput = document.getElementById('passenger-phone');
 const phoneError = document.getElementById('phone-error');
 
-// دالة الحفظ الموحدة في Supabase
 async function saveBookingToSupabase(customerData, fromVal, toVal) {
-    // 1. تسجيل المستخدم أولاً في جدول users
     const { data: userData, error: userError } = await supabase
         .from('users')
         .insert([{ name: customerData.name, phone: customerData.phone }])
@@ -170,19 +238,17 @@ async function saveBookingToSupabase(customerData, fromVal, toVal) {
     
     const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
     
-    // 2. تجهيز بيانات الرحلة مع user_id الحقيقي
     const tripData = {
         user_id: newUserId,
         From_location: fromVal,
         To_location: toVal
     };
     
-    // 3. إرسال الرحلة لجدول Trip
     const { data, error } = await supabase.from('Trip').insert([tripData]);
     if (error) {
         console.error('خطأ في حفظ الرحلة:', error.message);
     } else {
-        console.log('تم الحجز وحفظ البيانات بنجاح في قاعدة البيانات', data);
+        console.log('تم الحجز بنجاح في قاعدة البيانات', data);
     }
 }
 
@@ -208,14 +274,12 @@ passengerForm.addEventListener('submit', async (e) => {
 
     const customerData = { name: passengerName, phone: passengerPhone };
 
-    // تنفيذ الحفظ
     await saveBookingToSupabase(customerData, fromValue, toValue);
-    
     switchSection('section-payment-method');
 });
 
 // ==========================================
-// 5. اختيار طريقة الدفع وتفاصيلها
+// 6. وسائل الدفع وتفاصيلها
 // ==========================================
 const paymentRadios = document.querySelectorAll('input[name="payment-method"]');
 const btnProceedPayment = document.getElementById('btn-proceed-payment');
@@ -259,7 +323,7 @@ function renderPaymentDetails(method) {
 }
 
 // ==========================================
-// 6. الحل النهائي الشامل لأزرار الرجوع (Event Delegation)
+// 7. زر الرجوع الشامل
 // ==========================================
 document.addEventListener('click', function(event) {
     const backBtn = event.target.closest('.back-btn');
