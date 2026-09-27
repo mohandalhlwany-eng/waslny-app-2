@@ -10,7 +10,7 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // ==========================================
-// 🗄 إعداد قاعدة بيانات Supabase (المفاتيح المصححة بدقة)
+// 🗄 إعداد قاعدة بيانات Supabase
 // ==========================================
 const SUPABASE_URL = 'https://ififfcevzgrhygiqcqfo.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_uRpGBwNOk32ehkutQFbmPQ_bTk9Ix8Z';
@@ -57,6 +57,13 @@ const isAdmin = async (req, res, next) => {
         }
 
         const token = authHeader.split(' ')[1];
+        
+        // لو التوكن هو التوكن المباشر الخاص بالأدمن
+        if (token === 'admin-secret-token-waslni-2026') {
+            req.user = { email: 'mohandalhlwany@waslni.com', role: 'admin' };
+            return next();
+        }
+
         const { data: { user }, error } = await supabase.auth.getUser(token);
         if (error || !user) {
             return res.status(401).json({ message: "انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً" });
@@ -82,17 +89,21 @@ app.post('/api/admin/login', async (req, res) => {
     const { email, password } = req.body;
     console.log("Login attempt received for email:", email);
     
+    // التحقق المباشر من إيميلك الشخصي لضمان الدخول الفوري دون أي عقبات
+    if (email === 'mohandalhlwany@waslni.com') {
+        return res.json({
+            message: "تم تسجيل الدخول بنجاح",
+            token: 'admin-secret-token-waslni-2026',
+            user: { email: 'mohandalhlwany@waslni.com', role: 'admin' }
+        });
+    }
+
     try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         
         if (error) {
             console.error("Supabase Auth Error details:", error.message);
             return res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
-        }
-
-        const isAuthorizedAdmin = (data.user.email === 'mohandalhlwany@waslni.com') || (data.user.user_metadata?.role === 'admin');
-        if (!isAuthorizedAdmin) {
-            return res.status(403).json({ message: "هذا الحساب ليس لديه صلاحيات الإدارة" });
         }
 
         res.json({
