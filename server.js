@@ -10,7 +10,7 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // ==========================================
-// 🗄️ إعداد قاعدة بيانات Supabase
+// 🗄 إعداد قاعدة بيانات Supabase
 // ==========================================
 const supabase = createClient('https://ififfcevzgrhygiqcqfo.supabase.co', 'sb_publishable_uRpGBwNOk32ehkutQFbmPQ_bTk9Ix8Z');
 // ==========================================
@@ -65,13 +65,13 @@ const isAdmin = async (req, res, next) => {
 
         const token = authHeader.split(' ')[1];
         const { data: { user }, error } = await supabase.auth.getUser(token);
-
         if (error || !user) {
             return res.status(401).json({ message: "انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً" });
         }
 
-        // التأكد من أن المستخدم لديه صلاحية أدمن في الـ Metadata
-        if (user.user_metadata?.role !== 'admin') {
+        // السماح للأدمن إما بالإيميل مباشرة أو بالـ Metadata
+        const isAdminUser = (user.email === 'mohandalhlwany@waslni.com') || (user.user_metadata?.role === 'admin');
+        if (!isAdminUser) {
             return res.status(403).json({ message: "عفواً، لا تملك صلاحيات للوصول إلى لوحة الإدارة" });
         }
 
@@ -98,15 +98,16 @@ app.post('/api/admin/login', async (req, res) => {
             return res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
         }
 
-        const userRole = data.user.user_metadata?.role;
-        if (userRole !== 'admin') {
+        // التحقق من الإيميل المباشر أو الـ Role
+        const isAuthorizedAdmin = (data.user.email === 'mohandalhlwany@waslni.com') || (data.user.user_metadata?.role === 'admin');
+        if (!isAuthorizedAdmin) {
             return res.status(403).json({ message: "هذا الحساب ليس لديه صلاحيات الإدارة" });
         }
 
         res.json({
             message: "تم تسجيل الدخول بنجاح",
             token: data.session.access_token,
-            user: { email: data.user.email, role: userRole }
+            user: { email: data.user.email, role: 'admin' }
         });
     } catch (err) {
         console.error("Login Error:", err);
@@ -140,7 +141,7 @@ app.get('/api/admin/bookings', isAdmin, async (req, res) => {
         }));
 
         res.json(formattedData);
-    } catch (err) {
+    } (err) {
         console.error("Fetch Bookings Error:", err);
         res.status(500).json({ message: "حدث خطأ أثناء جلب الحجوزات" });
     }
