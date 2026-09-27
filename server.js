@@ -120,25 +120,19 @@ app.post('/api/admin/login', async (req, res) => {
 app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('bookings')
-            .select(`
-                id,
-                passenger_name,
-                payment_method,
-                status,
-                trips ( route, departure_time )
-            `)
+            .from('users')
+            .select('*')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
         
-        const formattedData = data.map(b => ({
-            id: b.id,
-            passenger_name: b.passenger_name,
-            trip_route: b.trips?.route || 'غير محدد',
-            trip_date: b.trips?.departure_time ? new Date(b.trips.departure_time).toLocaleString('ar-EG') : 'غير محدد',
-            payment_method: b.payment_method || 'غير محدد',
-            status: b.status || 'معلق'
+        const formattedData = data.map(u => ({
+            id: u.id,
+            passenger_name: u.name || u.passenger_name || u.full_name || 'غير محدد',
+            trip_route: u.route || u.trip_route || 'غير محدد',
+            trip_date: u.created_at ? new Date(u.created_at).toLocaleString('ar-EG') : 'غير محدد',
+            payment_method: u.payment_method || u.phone || 'غير محدد',
+            status: u.status || 'معلق'
         }));
 
         res.json(formattedData);
