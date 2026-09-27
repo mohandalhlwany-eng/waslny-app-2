@@ -1,5 +1,5 @@
 // ==========================================
-// 0. ربط Supabase (في أول الملف)
+// 1. ربط Supabase (في أول الملف)
 // ==========================================
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
@@ -8,7 +8,7 @@ const supabaseKey = 'sb_publishable_uRpGBwNOk32ehkutQFbMpQ_bTk9Ix8Z'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 // ==========================================
-// 1. خريطة المدن والمحطات
+// 2. خريطة المدن والمحطات
 // ==========================================
 const locations = {
     "المنصورة": ["الجمالية", "ميت سلسيل", "الرياض", "ميت عاصم", "منية النصر", "دكرنس", "كفر القباب", "المنصورة الاستاد", "المنصورة سندوب", "منية سندوب", "ميت معاند", "أجا", "كفر عوض", "فيشا", "بشلا", "كوبري ابو نبهان ميت غمر", "كوبري دقادوس ميت غمر", "كوبري البراميل ميت غمر", "كوبري صهرجت الكبرى"],
@@ -26,10 +26,9 @@ const locations = {
 const mainHubs = ["بني سويف", "المنيا"];
 
 // ==========================================
-// 🔴 جدول تعديل الرحلات المخصصة (عدل وأضف براحتك هنا)
+// 3. جدول الرحلات المخصصة
 // ==========================================
 const customTrips = [
-    // --- مثال 1: رحلة من المنصورة إلى بني سويف ---
     {
         fromCity: "المنصورة",
         toCity: "بني سويف",
@@ -44,8 +43,6 @@ const customTrips = [
         price: "355",
         days: "يومياً"
     },
-
-    // --- مثال 2: رحلة من بني سويف إلى المنصورة ---
     {
         fromCity: "بني سويف",
         toCity: "المنصورة",
@@ -53,8 +50,6 @@ const customTrips = [
         price: "355",
         days: "السبت والأحد"
     },
-
-    // --- مثال 3: رحلة من الشرقية إلى بني سويف ---
     {
         fromCity: "الشرقية",
         toCity: "بني سويف",
@@ -62,21 +57,26 @@ const customTrips = [
         price: "300",
         days: "طوال الأسبوع"
     }
-
-    // 💡 يمكنك إضافة أي رحلة جديدة هنا بنفس الشكل:
-    /*
-    ,{
-        fromCity: "اسم المدينة من",
-        toCity: "اسم المدينة إلى",
-        time: "الموعد",
-        price: "السعر",
-        days: "أيام الرحلة"
-    }
-    */
 ];
 
 // ==========================================
-// 2. العناصر والدوال الأساسية للواجهة
+// 4. دالة التنقل بين الصفحات (العامة)
+// ==========================================
+window.switchSection = function(targetSectionId) {
+    document.querySelectorAll('.section').forEach(sec => {
+        sec.classList.remove('active');
+        sec.classList.add('hidden');
+    });
+    const target = document.getElementById(targetSectionId);
+    if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('active');
+        window.scrollTo(0, 0);
+    }
+};
+
+// ==========================================
+// 5. إدارة قوائم الاختيار (المدن والمحطات)
 // ==========================================
 const cityFromSelect = document.getElementById('city-from');
 const stationFromSelect = document.getElementById('station-from');
@@ -84,18 +84,16 @@ const cityToSelect = document.getElementById('city-to');
 const stationToSelect = document.getElementById('station-to');
 const btnShowTrips = document.getElementById('btn-show-trips');
 
-// ملء قائمة المدن عند البداية
 function populateCities() {
+    if (!cityFromSelect || !cityToSelect) return;
     cityFromSelect.innerHTML = '<option value="" disabled selected>اختر المدينة</option>';
     cityToSelect.innerHTML = '<option value="" disabled selected>اختر المدينة</option>';
-    const cities = Object.keys(locations);
-    cities.forEach(city => {
+    Object.keys(locations).forEach(city => {
         cityFromSelect.add(new Option(city, city));
         cityToSelect.add(new Option(city, city));
     });
 }
 
-// تحديث المحطات
 function updateStations(citySelect, stationSelect) {
     stationSelect.innerHTML = '<option value="" disabled selected>اختر المحطة</option>';
     const selectedCity = citySelect.value;
@@ -106,29 +104,19 @@ function updateStations(citySelect, stationSelect) {
     }
 }
 
-// الفلترة الذكية (لإجبار اختيار بني سويف أو المنيا كطرف أساسي)
 function filterCounterpart(sourceSelect, targetSelect, targetStationSelect) {
     const selectedVal = sourceSelect.value;
     const currentTargetVal = targetSelect.value;
-    
     targetSelect.innerHTML = '<option value="" disabled selected>اختر المدينة</option>';
-    
     if (!selectedVal) return;
-
     const cities = Object.keys(locations);
-    
     if (mainHubs.includes(selectedVal)) {
         cities.forEach(city => {
-            if (!mainHubs.includes(city)) {
-                targetSelect.add(new Option(city, city));
-            }
+            if (!mainHubs.includes(city)) targetSelect.add(new Option(city, city));
         });
     } else {
-        mainHubs.forEach(hub => {
-            targetSelect.add(new Option(hub, hub));
-        });
+        mainHubs.forEach(hub => targetSelect.add(new Option(hub, hub)));
     }
-
     const optionExists = Array.from(targetSelect.options).some(opt => opt.value === currentTargetVal);
     if (optionExists && currentTargetVal !== "") {
         targetSelect.value = currentTargetVal;
@@ -137,66 +125,53 @@ function filterCounterpart(sourceSelect, targetSelect, targetStationSelect) {
     }
 }
 
-// الأحداث (Event Listeners) للمدن
-cityFromSelect.addEventListener('change', () => {
-    updateStations(cityFromSelect, stationFromSelect);
-    filterCounterpart(cityFromSelect, cityToSelect, stationToSelect);
-});
+if (cityFromSelect && cityToSelect) {
+    cityFromSelect.addEventListener('change', () => {
+        updateStations(cityFromSelect, stationFromSelect);
+        filterCounterpart(cityFromSelect, cityToSelect, stationToSelect);
+    });
 
-cityToSelect.addEventListener('change', () => {
-    updateStations(cityToSelect, stationToSelect);
-    filterCounterpart(cityToSelect, cityFromSelect, stationFromSelect);
-});
+    cityToSelect.addEventListener('change', () => {
+        updateStations(cityToSelect, stationToSelect);
+        filterCounterpart(cityToSelect, cityFromSelect, stationFromSelect);
+    });
 
-// تهيئة القوائم عند التحميل
-populateCities();
-
-// ==========================================
-// 3. التنقل بين الصفحات (SPA Navigation)
-// ==========================================
-function switchSection(targetSectionId) {
-    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-    document.getElementById(targetSectionId).classList.add('active');
-    window.scrollTo(0, 0);
+    populateCities();
 }
 
 // ==========================================
-// 4. عرض الرحلات المخصصة (Dynamically Generated)
+// 6. عرض والبحث عن الرحلات
 // ==========================================
-btnShowTrips.addEventListener('click', () => {
-    if (!cityFromSelect.value || !stationFromSelect.value || !cityToSelect.value || !stationToSelect.value) {
-        alert("برجاء اختيار المدينة والمحطة لجهتي السفر والوصول أولاً.");
-        return;
-    }
-    generateTrips();
-    switchSection('section-trips');
-});
+if (btnShowTrips) {
+    btnShowTrips.addEventListener('click', () => {
+        if (!cityFromSelect.value || !stationFromSelect.value || !cityToSelect.value || !stationToSelect.value) {
+            alert("برجاء اختيار المدينة والمحطة لجهتي السفر والوصول أولاً.");
+            return;
+        }
+        generateTrips();
+        switchSection('section-trips');
+    });
+}
 
 function generateTrips() {
     const tripsList = document.getElementById('trips-list');
+    if (!tripsList) return;
     tripsList.innerHTML = ''; 
-
-    const selectedFromCity = cityFromSelect.value;
-    const selectedToCity = cityToSelect.value;
-
-    // تصفية الرحلات المخصصة المتاحة بين المدينتين المحددتين
+    
     const matchingTrips = customTrips.filter(trip => 
-        trip.fromCity === selectedFromCity && trip.toCity === selectedToCity
+        trip.fromCity === cityFromSelect.value && trip.toCity === cityToSelect.value
     );
 
-    // حالة عدم وجود رحلات
     if (matchingTrips.length === 0) {
         tripsList.innerHTML = `
-            <div style="text-align: center; padding: 35px 15px; color: #666; font-size: 16px; background: #fff; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                لا توجد رحلات متاحة حالياً من <b>${selectedFromCity}</b> إلى <b>${selectedToCity}</b>.
-            </div>
-        `;
+            <div style="text-align: center; padding: 35px 15px; color: #666; font-size: 16px; background: #fff; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                لا توجد رحلات متاحة حالياً من <b>${cityFromSelect.value}</b> إلى <b>${cityToSelect.value}</b>.
+            </div>`;
         return;
     }
 
-    // عرض الرحلات المطابقة فقط
     matchingTrips.forEach(trip => {
-        const tripHTML = `
+        tripsList.innerHTML += `
             <div class="trip-card">
                 <div class="trip-price">${trip.price} <span>جنية</span></div>
                 <div class="trip-route">
@@ -207,146 +182,138 @@ function generateTrips() {
                     🕒 ${trip.time}
                     ${trip.days ? `<div style="font-size: 13px; color: #666; margin-top: 4px;">📅 ${trip.days}</div>` : ''}
                 </div>
-                <button class="btn-select-trip" onclick="selectTrip()">اختر الرحلة</button>
+                <button class="main-btn" style="margin-top: 10px; padding: 8px 15px; font-size: 14px;" onclick="selectTrip()">اختر الرحلة</button>
             </div>
         `;
-        tripsList.innerHTML += tripHTML;
     });
 }
 
 window.selectTrip = function() {
     switchSection('section-data');
-}
+};
 
 // ==========================================
-// 5. حفظ البيانات في Supabase
+// 7. إدخال البيانات وحفظ الحجز في Supabase
 // ==========================================
 const passengerForm = document.getElementById('passenger-form');
 const phoneInput = document.getElementById('passenger-phone');
 const phoneError = document.getElementById('phone-error');
 
 async function saveBookingToSupabase(customerData, fromVal, toVal) {
-    const { data: userData, error: userError } = await supabase
-        .from('users')
-        .insert([{ name: customerData.name, phone: customerData.phone }])
-        .select();
-
+    const { data: userData, error: userError } = await supabase.from('users').insert([{ name: customerData.name, phone: customerData.phone }]).select();
     if (userError) {
         console.error('خطأ في حفظ المستخدم:', userError.message);
         return;
     }
     
     const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
-    
-    const tripData = {
-        user_id: newUserId,
-        From_location: fromVal,
-        To_location: toVal
-    };
-    
-    const { data, error } = await supabase.from('Trip').insert([tripData]);
-    if (error) {
-        console.error('خطأ في حفظ الرحلة:', error.message);
-    } else {
-        console.log('تم الحجز بنجاح في قاعدة البيانات', data);
-    }
+    const { data, error } = await supabase.from('Trip').insert([{ user_id: newUserId, From_location: fromVal, To_location: toVal }]);
+    if (error) console.error('خطأ في حفظ الرحلة:', error.message);
+    else console.log('تم الحجز بنجاح في Supabase', data);
 }
 
-passengerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const phoneVal = phoneInput.value;
-    const phoneRegex = /^01[0125][0-9]{8}$/;
-    
-    if (!phoneRegex.test(phoneVal)) {
-        phoneError.style.display = 'block';
-        return;
-    }
-    phoneError.style.display = 'none';
+if (passengerForm) {
+    passengerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!/^01[0125][0-9]{8}$/.test(phoneInput.value)) {
+            if (phoneError) phoneError.style.display = 'block'; 
+            return;
+        }
+        if (phoneError) phoneError.style.display = 'none';
 
-    const passengerName = document.getElementById('passenger-name').value;
-    const passengerPhone = phoneInput.value;
-    
-    const fromValue = `${cityFromSelect.value} - ${stationFromSelect.value}`;
-    const cityToVal = cityToSelect ? cityToSelect.value : '';
-    const stationToVal = stationToSelect ? stationToSelect.value : '';
-    const toValue = `${cityToVal} - ${stationToVal}`;
-
-    const customerData = { name: passengerName, phone: passengerPhone };
-
-    await saveBookingToSupabase(customerData, fromValue, toValue);
-    switchSection('section-payment-method');
-});
+        await saveBookingToSupabase(
+            { name: document.getElementById('passenger-name').value, phone: phoneInput.value },
+            `${cityFromSelect.value} - ${stationFromSelect.value}`,
+            `${cityToSelect.value} - ${stationToSelect.value}`
+        );
+        switchSection('section-payment-method');
+    });
+}
 
 // ==========================================
-// 6. وسائل الدفع وتفاصيلها
+// 8. اختيار طريقة الدفع وعرض التفاصيل
 // ==========================================
-const paymentRadios = document.querySelectorAll('input[name="payment-method"]');
 const btnProceedPayment = document.getElementById('btn-proceed-payment');
 let selectedPayment = null;
 
-paymentRadios.forEach(radio => {
+document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
         selectedPayment = e.target.value;
-        btnProceedPayment.disabled = false;
+        if (btnProceedPayment) btnProceedPayment.disabled = false;
     });
 });
 
-btnProceedPayment.addEventListener('click', () => {
-    renderPaymentDetails(selectedPayment);
-    switchSection('section-payment-details');
-});
-
-function renderPaymentDetails(method) {
-    const dynamicInfo = document.getElementById('dynamic-payment-info');
-    if (method === 'vodafone') {
-        dynamicInfo.innerHTML = `
-            <div class="payment-details-text">
-                <div>الرقم المحول اليه : <span>01026264522</span></div>
-                <div>بإسم : <span>مهند م*** ر***</span></div>
-                <div>المبلغ : <span>355 جنية</span></div>
-            </div>
-        `;
-    } else if (method === 'instapay') {
-        dynamicInfo.innerHTML = `
-            <div class="payment-details-text">
-                <div>الرقم المحول اليه : <span>01026264522</span></div>
-                <div>بإسم : <span dir="ltr">MOHANNED M R</span></div>
-                <div>المبلغ : <span>355 جنية</span></div>
-            </div>
-            <div class="insta-alert">
-                <i class="fa-solid fa-triangle-exclamation alert-triangle"></i>
-                تنويه : تأكد من داخل تطبيق انستا باي بالإرسال الى انستاباي وليس المحفظة الالكترونية عبر اختيار اول خانة على شكل هاتف
-            </div>
-        `;
-    }
+if (btnProceedPayment) {
+    btnProceedPayment.addEventListener('click', () => {
+        const dynamicInfo = document.getElementById('dynamic-payment-info');
+        if (!dynamicInfo) return;
+        
+        if (selectedPayment === 'vodafone') {
+            dynamicInfo.innerHTML = `
+                <div class="payment-details-text" style="background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px;">
+                    <div>الرقم المحول اليه : <b dir="ltr">01026264522</b></div>
+                    <div>بإسم : <b>مهند م*** ر***</b></div>
+                    <div>المبلغ : <b>355 جنية</b></div>
+                </div>`;
+        } else if (selectedPayment === 'instapay') {
+            dynamicInfo.innerHTML = `
+                <div class="payment-details-text" style="background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px;">
+                    <div>الرقم المحول اليه : <b dir="ltr">01026264522</b></div>
+                    <div>بإسم : <b dir="ltr">MOHANNED M R</b></div>
+                    <div>المبلغ : <b>355 جنية</b></div>
+                </div>
+                <div class="insta-alert" style="color: #c0392b; font-size: 13px; margin-bottom: 15px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> تأكد من الإرسال الى انستاباي وليس المحفظة الالكترونية
+                </div>`;
+        }
+        switchSection('section-payment-details');
+    });
 }
 
 // ==========================================
-// 7. زر الرجوع الشامل
+// 9. زر الرجوع الشامل لجميع الصفحات
 // ==========================================
 document.addEventListener('click', function(event) {
     const backBtn = event.target.closest('.back-btn');
     if (!backBtn) return;
-    
     event.preventDefault();
-    let targetId = backBtn.getAttribute('data-target');
     
+    let targetId = backBtn.getAttribute('data-target');
     if (!targetId && backBtn.getAttribute('onclick')) {
         const match = backBtn.getAttribute('onclick').match(/'([^']+)'/);
         if (match) targetId = match[1];
     }
+    if (targetId) switchSection(targetId);
+});
 
-    if (targetId) {
-        document.querySelectorAll('.section').forEach(sec => {
-            sec.classList.add('hidden');
-            sec.classList.remove('active');
-        });
-        const targetSection = document.getElementById(targetId);
-        if (targetSection) {
-            targetSection.classList.remove('hidden');
-            targetSection.classList.add('active');
-            window.scrollTo(0, 0);
+// ==========================================
+// 10. تشغيل وإدارة النمط الليلي (Dark Mode)
+// ==========================================
+function applyTheme(theme) {
+    const isDark = theme === 'dark';
+    document.body.classList.toggle('dark-mode', isDark);
+    
+    // تحديث كافة أزرار النمط الليلي بجميع الصفحات
+    const darkModeBtns = document.querySelectorAll('.dark-mode-toggle');
+    darkModeBtns.forEach(btn => {
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
         }
-    }
+    });
+    localStorage.setItem('theme', theme);
+}
+
+// قراءة الحالة السابقة عند التحميل
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
+    // إضافة مستمع الأحداث لكافة أزرار النمط الليلي
+    document.querySelectorAll('.dark-mode-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const currentTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+            applyTheme(currentTheme);
+        });
+    });
 });
