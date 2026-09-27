@@ -141,8 +141,9 @@ app.get('/api/admin/bookings', isAdmin, async (req, res) => {
         }));
 
         res.json(formattedData);
-    } (err) {
-        console.error("Fetch Bookings Error:", err);
+} catch (err) {
+    console.error("Fetch Bookings Error:", err);
+
         res.status(500).json({ message: "حدث خطأ أثناء جلب الحجوزات" });
     }
 });
