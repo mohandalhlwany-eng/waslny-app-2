@@ -439,3 +439,6 @@ body.dark-mode .box-title { color: #60a5fa; }
 body.dark-mode label, body.dark-mode .contact-text, body.dark-mode .preview-value, body.dark-mode .preview-label { color: #cbd5e1; }
 /* تغيير ألوان القوائم والحقول */ body.dark-mode select, body.dark-mode input { background-color: #334155; color: #ffffff; border-color: #475569; }
 /* تغيير لون الزرار نفسه في الوضع الليلي / body.dark-mode .dark-mode-toggle { background: #334155; color: #f1c40f; / لون القمر/الشمس أصفر */ }
+/* ========================================== إصلاح مكان الزرار في الصفحات الداخلية للموبايل ========================================== */
+/* إذا كان الزرار ما زال يتداخل مع اللوجو في الصفحات الداخلية / .header-with-back .dark-mode-toggle, body:not(.home-page) .dark-mode-toggle { position: absolute; top: 15px; right: 110px; / يوضع على اليمين بجانب زر الرجوع / left: auto;   / إلغاء تموضعه على اليسار لمنع التداخل مع اللوجو */ z-index: 100; }
+/* ضبط استجابة الهيدر على الشاشات الصغيرة (الموبايل) */ @media (max-width: 480px) { .header-with-back .dark-mode-toggle, body:not(.home-page) .dark-mode-toggle { top: 12px; right: 105px; width: 38px; height: 38px; font-size: 1rem; } }
