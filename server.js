@@ -58,7 +58,7 @@ const isAdmin = async (req, res, next) => {
 
         const token = authHeader.split(' ')[1];
         
-        // لو التوكن هو التوكن السري، اسمح بالدخول فوراً واخرج من الدالة بدون الذهاب لـ Supabase
+        // التوكن السري الخاص بالأدمن للوصول المباشر
         if (token === 'admin-secret-token-waslni-2026') {
             req.user = { email: 'mohandalhlwany@waslni.com', role: 'admin' };
             return next();
@@ -89,8 +89,8 @@ app.post('/api/admin/login', async (req, res) => {
     const { email, password } = req.body;
     console.log("Login attempt received for email:", email);
     
-    // التحقق المباشر من إيميلك الشخصي لضمان الدخول الفوري دون أي عقبات
-    if (email === 'mohandalhlwany@waslni.com') {
+    // التحقق الصارم من البريد الإلكتروني وكلمة المرور المخصصة للأدمن
+    if (email === 'mohandalhlwany@waslni.com' && password === '11223344556677889910101010') {
         return res.json({
             message: "تم تسجيل الدخول بنجاح",
             token: 'admin-secret-token-waslni-2026',
@@ -101,8 +101,8 @@ app.post('/api/admin/login', async (req, res) => {
     try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         
-        if (error) {
-            console.error("Supabase Auth Error details:", error.message);
+        if (error || !data.user) {
+            console.error("Supabase Auth Error details:", error ? error.message : "بيانات غير صحيحة");
             return res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
         }
 
