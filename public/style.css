@@ -428,3 +428,14 @@ select:focus, input:focus {
         flex-direction: column;
     }
 }
+/* ========================================== تنسيقات زر النمط الليلي والوضع الداكن ========================================== */
+/* شكل الزرار الدائري العام */ .dark-mode-toggle { background: rgba(255, 255, 255, 0.95); border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #1f2937; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.3s ease; z-index: 100; }
+.dark-mode-toggle:hover { transform: scale(1.08); background: #ffffff; }
+/* موقعه في الصفحة الرئيسية (فوق على اليمين) */ .main-dark-btn { position: absolute; top: 20px; right: 20px; }
+/* الهيدر الخاص بالصفحات الداخلية لتوزيع زر الرجوع والزرار الليلي */ .header-with-back { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+/* ========================================== تغيير ألوان الموقع عند تفعيل الوضع الليلي ========================================== */ body.dark-mode { background-color: #0f172a; color: #f8fafc; }
+/* تغيير ألوان الصناديق البيضاء للون الداكن */ body.dark-mode .white-box { background: #1e293b; color: #f8fafc; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+body.dark-mode .box-title { color: #60a5fa; }
+body.dark-mode label, body.dark-mode .contact-text, body.dark-mode .preview-value, body.dark-mode .preview-label { color: #cbd5e1; }
+/* تغيير ألوان القوائم والحقول */ body.dark-mode select, body.dark-mode input { background-color: #334155; color: #ffffff; border-color: #475569; }
+/* تغيير لون الزرار نفسه في الوضع الليلي / body.dark-mode .dark-mode-toggle { background: #334155; color: #f1c40f; / لون القمر/الشمس أصفر */ }
