@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 // 🗄 إعداد قاعدة بيانات Supabase
 // ==========================================
 const SUPABASE_URL = 'https://ififfcevzgrhygiqcqfo.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_uRpGBwNOk32ehkutQFbmPQ_bTk9Ix8Z';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmaWZmY2V2emdyaHlnaXFjcWZvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODkzMjQ3MSwiZXhwIjoyMTA0NTA4NDcxfQ._dmfa-91RyRXBSQaN8Rr0xheuFFynnU43MI_kJfrl6I';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ==========================================
