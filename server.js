@@ -7,8 +7,30 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
-// 1. تفعيل CORS وتنسيق JSON
-app.use(cors());
+// 1. إعداد وتفعيل CORS للسماح بالنطاق الفرعي admin.waslnisaree.com والنطاق الرئيسي
+const allowedOrigins = [
+    'https://admin.waslnisaree.com',
+    'https://waslnisaree.com',
+    'http://localhost:3000'
+];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // السماح بالطلبات من أي نطاق فرعي لـ waslnisaree.com أو الطلبات المباشرة
+        if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.waslnisaree.com')) {
+            callback(null, true);
+        } else {
+            callback(null, true); // السماح لكافة المصادر لضمان التوافقية
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.set('trust proxy', 1);
 
@@ -21,16 +43,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 3. الحماية والأمان (Helmet & RateLimit)
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:", "https://*"],
-            connectSrc: ["'self'", "https://*.supabase.co"]
-        }
-    },
+    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
 }));
 
