@@ -6,6 +6,7 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
+app.use(cors());
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
