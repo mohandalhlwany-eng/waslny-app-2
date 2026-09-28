@@ -141,7 +141,37 @@ app.get('/api/admin/bookings', isAdmin, async (req, res) => {
         res.status(500).json({ message: "حدث خطأ أثناء جلب الحجوزات" });
     }
 });
+// 1. زرار تغيير حالة الحجز
+app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const { error } = await supabase.from('users').update({ status }).eq('id', id);
+        if (error) throw error;
+        res.json({ message: "تم التحديث" });
+    } catch (err) { res.status(500).json({ message: "خطأ" }); }
+});
 
+// 2. زرار تغيير حالة الدفع
+app.patch('/api/admin/bookings/:id/payment', isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { payment_status } = req.body;
+        const { error } = await supabase.from('users').update({ payment_status }).eq('id', id);
+        if (error) throw error;
+        res.json({ message: "تم التحديث" });
+    } catch (err) { res.status(500).json({ message: "خطأ" }); }
+});
+
+// 3. زرار الحذف
+app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('users').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ message: "تم الحذف" });
+    } catch (err) { res.status(500).json({ message: "خطأ" }); }
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('*', (req, res) => {
