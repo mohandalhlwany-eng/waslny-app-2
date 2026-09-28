@@ -14,10 +14,10 @@ app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 3000;
 
-// 2. إعدادات Supabase (تم أخذ البيانات المباشرة من الصورة)
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ififfcevzgrhyglqcqfo.supabase.co';[cite: 12]
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmaWZmY2V2emdyaHlnbHFjcWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjM0NjU4OTUsImV4cCI6MjAzODg0MTg5NX0.7q6Y2A3sHkXfJcMZvEIbd';[cite: 12]
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);[cite: 12]
+// 2. إعدادات Supabase
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ififfcevzgrhyglqcqfo.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmaWZmY2V2emdyaHlnbHFjcWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjM0NjU4OTUsImV4cCI6MjAzODg0MTg5NX0.7q6Y2A3sHkXfJcMZvEIbd';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 3. الحماية والأمان (Helmet & RateLimit)
 app.use(helmet({
