@@ -6,20 +6,20 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
+
+// 1. تفعيل CORS وتنسيق JSON
 app.use(cors());
+app.use(express.json());
 app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 3000;
 
-// ==========================================
-// 🗄 إعداد قاعدة بيانات Supabase
-// ==========================================
-const SUPABASE_URL = 'https://ififfcevzgrhygiqcqfo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmaWZmY2V2emdyaHlnaXFjcWZvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODkzMjQ3MSwiZXhwIjoyMTA0NTA4NDcxfQ._dmfa-91RyRXBSQaN8Rr0xheuFFynnU43MI_kJfrl6I';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// 2. إعدادات Supabase (تم أخذ البيانات المباشرة من الصورة)
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ififfcevzgrhyglqcqfo.supabase.co';[cite: 12]
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmaWZmY2V2emdyaHlnbHFjcWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjM0NjU4OTUsImV4cCI6MjAzODg0MTg5NX0.7q6Y2A3sHkXfJcMZvEIbd';[cite: 12]
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);[cite: 12]
 
-// ==========================================
-// 🛡 Security Middlewares
-// ==========================================
+// 3. الحماية والأمان (Helmet & RateLimit)
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -28,181 +28,119 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
             imgSrc: ["'self'", "data:", "https://*"],
-            connectSrc: ["'self'", "https://*.supabase.co"],
-        },
+            connectSrc: ["'self'", "https://*.supabase.co"]
+        }
     },
-    crossOriginEmbedderPolicy: false,
+    crossOriginEmbedderPolicy: false
 }));
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: "تم تجاوز الحد المسموح من الطلبات، يرجى المحاولة لاحقاً.",
+    message: "تم تجاوز حد المسموح من الطلبات، يرجى المحاولة لاحقاً",
     standardHeaders: true,
-    legacyHeaders: false,
+    legacyHeaders: false
 });
 app.use(limiter);
-app.use(cors());
 
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-
-// ==========================================
-// 👑 كود الحماية (isAdmin Middleware)
-// ==========================================
-const isAdmin = async (req, res, next) => {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ message: "يرجى تسجيل الدخول أولاً" });
-        }
-
-        const token = authHeader.split(' ')[1];
-        
-        // التوكن السري الخاص بالأدمن للوصول المباشر
-        if (token === 'admin-secret-token-waslni-2026') {
-            req.user = { email: 'mohandalhlwany@waslni.com', role: 'admin' };
-            return next();
-        }
-
-        const { data: { user }, error } = await supabase.auth.getUser(token);
-        if (error || !user) {
-            return res.status(401).json({ message: "انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجددا" });
-        }
-
-        const isAdminUser = (user.email === 'mohandalhlwany@waslni.com') || (user.user_metadata?.role === 'admin');
-        if (!isAdminUser) {
-            return res.status(403).json({ message: "عفواً، لا تملك صلاحيات الوصول إلى لوحة الإدارة" });
-        }
-
-        req.user = user;
-        next();
-    } catch (err) {
-        console.error("Admin Auth Error:", err);
-        res.status(500).json({ message: "خطأ في التحقق من الصلاحيات" });
+// 4. دالة التحقق من صلاحيات الأدمن
+const isAdmin = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+        return res.status(401).json({ message: "غير مصرح بالدخول" });
     }
+    next();
 };
 
-// ==========================================
-// 🚀 مسارات لوحة الإدارة (Admin API Routes)
-// ==========================================
-app.post('/api/admin/login', async (req, res) => {
-    const { email, password } = req.body;
-    console.log("Login attempt received for email:", email);
-    
-    // التحقق الصارم من البريد الإلكتروني وكلمة المرور المخصصة للأدمن
-    if (email === 'mohandalhlwany@waslni.com' && password === '11223344556677889910101010') {
-        return res.json({
-            message: "تم تسجيل الدخول بنجاح",
-            token: 'admin-secret-token-waslni-2026',
-            user: { email: 'mohandalhlwany@waslni.com', role: 'admin' }
-        });
-    }
+// =========================================================
+// 5. مسارات لوحة التحكم (Admin APIs)
+// =========================================================
 
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        
-        if (error || !data.user) {
-            console.error("Supabase Auth Error details:", error ? error.message : "بيانات غير صحيحة");
-            return res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
-        }
-
-        res.json({
-            message: "تم تسجيل الدخول بنجاح",
-            token: data.session.access_token,
-            user: { email: data.user.email, role: 'admin' }
-        });
-    } catch (err) {
-        console.error("Login Server Exception:", err);
-        res.status(500).json({ message: "حدث خطأ داخلي في السيرفر" });
-    }
-});
-
+// جلب الحجوزات والربط بين جدول users وجدول Trip
 app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .select(`
+                id,
+                name,
+                phone,
+                created_at,
+                Trip (
+                    id,
+                    From_location,
+                    To_location
+                )
+            `);
 
         if (error) throw error;
-        
-        const formattedData = data.map(u => ({
-            id: u.id,
-            passenger_name: u.name || u.passenger_name || u.full_name || 'غير محدد',
-            trip_route: u.route || u.trip_route || 'غير محدد',
-            trip_date: u.created_at ? new Date(u.created_at).toLocaleString('ar-EG') : 'غير محدد',
-            payment_method: u.payment_method || u.phone || 'غير محدد',
-            status: u.status || 'معلق'
-        }));
+
+        const formattedData = data.map(u => {
+            const trip = Array.isArray(u.Trip) && u.Trip.length > 0 ? u.Trip[0] : (u.Trip || {});
+            const from = trip.From_location || 'غير محدد';
+            const to = trip.To_location || 'غير محدد';
+
+            return {
+                id: u.id,
+                passenger_name: u.name || 'بدون اسم',
+                phone: u.phone || 'غير متوفر',
+                trip_route: (from !== 'غير محدد' || to !== 'غير محدد') ? `${from} ⬅️ ${to}` : 'رحلة عامة',
+                pickup_point: from,
+                dropoff_point: to,
+                trip_date: u.created_at ? new Date(u.created_at).toLocaleDateString('ar-EG') : 'تاريخ اليوم',
+                payment_method: u.payment_method || 'كاش',
+                payment_status: u.payment_status || 'معلق',
+                status: u.status || 'مؤكد'
+            };
+        });
 
         res.json(formattedData);
+
     } catch (err) {
-        console.error("Fetch Bookings Error:", err);
-        res.status(500).json({ message: "حدث خطأ أثناء جلب الحجوزات" });
+        console.error("Fetch Error:", err);
+        res.status(500).json({ message: "خطأ أثناء جلب الحجوزات" });
     }
 });
-// 1. زرار تغيير حالة الحجز
-app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
-        const { error } = await supabase.from('users').update({ status }).eq('id', id);
-        if (error) throw error;
-        res.json({ message: "تم التحديث" });
-    } catch (err) { res.status(500).json({ message: "خطأ" }); }
-});
 
-// 2. زرار تغيير حالة الدفع
-app.patch('/api/admin/bookings/:id/payment', isAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { payment_status } = req.body;
-        const { error } = await supabase.from('users').update({ payment_status }).eq('id', id);
-        if (error) throw error;
-        res.json({ message: "تم التحديث" });
-    } catch (err) { res.status(500).json({ message: "خطأ" }); }
-});
-
-// 3. زرار الحذف
-app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { error } = await supabase.from('users').delete().eq('id', id);
-        if (error) throw error;
-        res.json({ message: "تم الحذف" });
-    } catch (err) { res.status(500).json({ message: "خطأ" }); }
-});
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(PORT, () => {
-    console.log(`✅ Secure Server is running on port ${PORT}`);
-});
-
-// مسار التعديل
+// تحديث حالة الحجز (مؤكد / ملغى)
 app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
 
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('users')
             .update({ status })
             .eq('id', id);
 
         if (error) throw error;
-        res.json({ message: "تم تحديث الحالة بنجاح", data });
+        res.json({ message: "تم تحديث حالة الحجز بنجاح" });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "خطأ أثناء التحديث" });
+        res.status(500).json({ message: "خطأ أثناء تحديث حالة الحجز" });
     }
 });
 
-// مسار الحذف
+// تحديث حالة الدفع (معلق / تم الدفع / مسترد)
+app.patch('/api/admin/bookings/:id/payment', isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { payment_status } = req.body;
+
+        const { error } = await supabase
+            .from('users')
+            .update({ payment_status })
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: "تم تحديث حالة الدفع بنجاح" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "خطأ أثناء تحديث حالة الدفع" });
+    }
+});
+
+// حذف الحجز / الراكب
 app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -218,4 +156,18 @@ app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
         console.error(err);
         res.status(500).json({ message: "خطأ أثناء الحذف" });
     }
+});
+
+// =========================================================
+// 6. تشغيل الملفات الثابتة والسيرفر
+// =========================================================
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`Secure Server is running on port ${PORT}`);
 });
