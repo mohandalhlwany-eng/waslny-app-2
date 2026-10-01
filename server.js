@@ -1,159 +1,196 @@
+require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
-const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-
-// 1. تفعيل CORS الشامل وإعدادات البروكسي
-app.use(cors());
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
-
-app.use(express.json());
-app.set('trust proxy', 1);
-
 const PORT = process.env.PORT || 3000;
 
-// 2. إعدادات Supabase
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ififfcevzgrhyglqcqfo.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmaWZmY2V2emdyaHlnbHFjcWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjM0NjU4OTUsImV4cCI6MjAzODg0MTg5NX0.7q6Y2A3sHkXfJcMZvEIbd';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// 1. الاتصال بقاعدة بيانات Supabase عبر متغيرات البيئة فقط بدون مفاتيح سرية مكشوفة
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-// 3. الحماية والأمان (Helmet)
-app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+if (!supabaseUrl || !supabaseKey) {
+    console.warn('تنبيه: لم يتم العثور على SUPABASE_URL أو SUPABASE_KEY في متغيرات البيئة.');
+}
+
+const supabase = createClient(supabaseUrl || '', supabaseKey || '');
+
+// 2. إعدادات CORS الشاملة للسماح بالاتصال بين الدومين الفرعي والرئيسي
+const allowedOrigins = [
+    'https://admin.waslnisaree.com',
+    'https://waslnisaree.com',
+    'http://localhost:3000'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.waslnisaree.com')) {
+            callback(null, true);
+        } else {
+            callback(null, true);
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token']
 }));
 
-// 4. دالة تسجيل الدخول (Admin Login)
-const handleLogin = (req, res) => {
-    const { email, password, username } = req.body || {};
-    // قبول تسجيل الدخول وإرجاع استجابة JSON سليمة
-    return res.json({
-        success: true,
-        message: "تم تسجيل الدخول بنجاح",
-        token: "admin-token-waslni-2026",
-        user: { email: email || username || "admin@waslni.com", role: "admin" }
-    });
-};
+app.use(express.json());
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.set('trust proxy', 1);
 
-app.post('/api/admin/login', handleLogin);
-app.post('/api/login', handleLogin);
-
-// 5. دالة التحقق من التوكين (Permissive Middleware)
+// 3. التحقق من التوكين الخاص بالإدمن
 const isAdmin = (req, res, next) => {
-    next(); // السماح بالمرور لضمان عدم حجب البيانات
+    const authHeader = req.headers['authorization'];
+    const customToken = req.headers['x-admin-token'];
+    const expectedToken = process.env.ADMIN_TOKEN;
+
+    if (!expectedToken) {
+        return res.status(500).json({ success: false, message: 'خطأ في إعدادات السيرفر: ADMIN_TOKEN غير معرف' });
+    }
+
+    if ((authHeader && authHeader === `Bearer ${expectedToken}`) || customToken === expectedToken) {
+        next();
+    } else {
+        res.status(401).json({ success: false, message: 'غير مصرح بالدخول' });
+    }
 };
 
-// =========================================================
-// 6. مسار جلب الحجوزات والبيانات (حل مشكلة عدم ظهور البيانات)
-// =========================================================
+// 4. مسار تسجيل الدخول للوحة التحكم
+app.post('/api/admin/login', (req, res) => {
+    const { email, password } = req.body || {};
+    const validEmail = process.env.ADMIN_EMAIL;
+    const validPassword = process.env.ADMIN_PASSWORD;
+    const adminToken = process.env.ADMIN_TOKEN;
 
+    if (!validEmail || !validPassword || !adminToken) {
+        return res.status(500).json({ success: false, message: 'بيانات تسجيل الدخول غير مهيأة في متغيرات البيئة' });
+    }
+
+    if (email === validEmail && password === validPassword) {
+        return res.json({
+            success: true,
+            token: adminToken,
+            user: { email: validEmail, role: 'admin' },
+            message: 'تم تسجيل الدخول بنجاح'
+        });
+    }
+
+    return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+});
+
+// 5. مسار جلب الحجوزات مفرزة ومجمعة حسب كل رحلة
 app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     try {
-        // جلب البيانات من الجدولين بشكل منفصل لضمان التوافق وعدم حدوث خطأ العلاقات
-        const { data: users, error: uErr } = await supabase.from('users').select('*');
-        if (uErr) console.error("Users Error:", uErr);
+        // جلب جدول users وجدول Trip بشكل آمن
+        const { data: users, error: uErr } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+        if (uErr) throw uErr;
 
         const { data: trips, error: tErr } = await supabase.from('Trip').select('*');
-        if (tErr) console.error("Trips Error:", tErr);
+        if (tErr) console.error('Trip fetch notice:', tErr);
 
         const usersList = users || [];
         const tripsList = trips || [];
 
-        // دمج البيانات برمجياً بأمان
-        const formattedData = usersList.map(u => {
-            // البحث عن الرحلة الخاصة بالراكب عن طريق user_id أو id
-            const trip = tripsList.find(t => String(t.user_id) === String(u.id) || String(t.id) === String(u.id)) || {};
+        // تجميع وتصنيف البيانات حسب كل رحلة (From_location -> To_location)
+        const groupedTrips = {};
 
-            const from = trip.From_location || trip.from_location || 'غير محدد';
-            const to = trip.To_location || trip.to_location || 'غير محدد';
+        usersList.forEach(user => {
+            const userTrip = tripsList.find(t => String(t.user_id) === String(user.id) || String(t.id) === String(user.id)) || {};
+            const from = userTrip.From_location || userTrip.from_location || 'غير محدد';
+            const to = userTrip.To_location || userTrip.to_location || 'غير محدد';
+            const routeKey = (from !== 'غير محدد' || to !== 'غير محدد') ? `${from} ⬅️ ${to}` : 'رحلات عامة بدون تحديد';
 
-            return {
-                id: u.id,
-                passenger_name: u.name || u.passenger_name || 'بدون اسم',
-                phone: u.phone || 'غير متوفر',
-                trip_route: (from !== 'غير محدد' || to !== 'غير محدد') ? `${from} ⬅️ ${to}` : 'رحلة عامة',
-                pickup_point: from,
-                dropoff_point: to,
-                trip_date: u.created_at ? new Date(u.created_at).toLocaleDateString('ar-EG') : 'اليوم',
-                payment_method: u.payment_method || 'كاش',
-                payment_status: u.payment_status || 'معلق',
-                status: u.status || 'مؤكد'
-            };
+            if (!groupedTrips[routeKey]) {
+                groupedTrips[routeKey] = {
+                    route: routeKey,
+                    from_location: from,
+                    to_location: to,
+                    total_passengers: 0,
+                    passengers: []
+                };
+            }
+
+            groupedTrips[routeKey].total_passengers += 1;
+            groupedTrips[routeKey].passengers.push({
+                id: user.id,
+                name: user.name || 'بدون اسم',
+                phone: user.phone || 'غير متوفر',
+                created_at: user.created_at,
+                date_formatted: user.created_at ? new Date(user.created_at).toLocaleDateString('ar-EG') : 'اليوم',
+                time_formatted: user.created_at ? new Date(user.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '--',
+                payment_method: user.payment_method || 'كاش',
+                payment_status: user.payment_status || 'معلق',
+                status: user.status || 'مؤكد'
+            });
         });
 
-        res.json(formattedData);
+        res.json({
+            success: true,
+            total_records: usersList.length,
+            trips: Object.values(groupedTrips)
+        });
 
     } catch (err) {
-        console.error("Fetch Error:", err);
-        res.status(500).json({ error: "خطأ أثناء جلب الحجوزات", details: err.message });
+        console.error('Bookings Fetch Error:', err);
+        res.status(500).json({ success: false, message: 'خطأ أثناء جلب الحجوزات', error: err.message });
     }
 });
 
-// تحديث حالة الحجز
+// 6. تحديث حالة الحجز (مؤكد / ملغى)
 app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-
         const { error } = await supabase.from('users').update({ status }).eq('id', id);
         if (error) throw error;
-        res.json({ message: "تم تحديث حالة الحجز بنجاح" });
+        res.json({ success: true, message: 'تم تحديث حالة الحجز' });
     } catch (err) {
-        res.status(500).json({ error: "خطأ في التحديث" });
+        res.status(500).json({ success: false, message: 'خطأ في التحديث' });
     }
 });
 
-// تحديث حالة الدفع
+// 7. تحديث حالة الدفع (تم الدفع / معلق)
 app.patch('/api/admin/bookings/:id/payment', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { payment_status } = req.body;
-
         const { error } = await supabase.from('users').update({ payment_status }).eq('id', id);
         if (error) throw error;
-        res.json({ message: "تم تحديث حالة الدفع بنجاح" });
+        res.json({ success: true, message: 'تم تحديث حالة الدفع' });
     } catch (err) {
-        res.status(500).json({ error: "خطأ في التحديث" });
+        res.status(500).json({ success: false, message: 'خطأ في التحديث' });
     }
 });
 
-// حذف حجز
+// 8. حذف حجز
 app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { error } = await supabase.from('users').delete().eq('id', id);
         if (error) throw error;
-        res.json({ message: "تم الحذف بنجاح" });
+        res.json({ success: true, message: 'تم حذف الحجز بنجاح' });
     } catch (err) {
-        res.status(500).json({ error: "خطأ في الحذف" });
+        res.status(500).json({ success: false, message: 'خطأ في الحذف' });
     }
 });
 
-// =========================================================
-// 7. معالجة المسارات والملفات الثابتة
-// =========================================================
-
-// منع إرجاع HTML لأي مسار API غير موجود (يُرجع JSON دائماً)
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ error: "المسار غير موجود" });
-});
-
-// تشغيل الملفات الثابتة للواجهة
+// 9. تقديم الملفات الثابتة والواجهات
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ success: false, message: 'مسار API غير موجود' });
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.listen(PORT, () => {
