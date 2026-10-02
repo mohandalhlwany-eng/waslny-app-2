@@ -46,9 +46,9 @@ const customTrips = [
     {
         fromCity: "بني سويف",
         toCity: "المنصورة",
-        time: "02:00 م",
+        time: "04:00 عصرا",
         price: "355",
-        days: "السبت والأحد"
+        days: "الخميس"
     },
     {
         fromCity: "الشرقية",
