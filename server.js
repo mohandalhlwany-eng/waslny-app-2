@@ -7,12 +7,12 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 1. Supabase Connection
+// 1. الاتصال بقاعدة البيانات
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
-// 2. CORS Settings
+// 2. إعدادات CORS الشاملة
 const allowedOrigins = [
     'https://admin.waslnisaree.com',
     'https://waslnisaree.com',
@@ -38,14 +38,14 @@ app.use(express.json());
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.set('trust proxy', 1);
 
-// 3. Admin Middleware
+// 3. التحقق من صلاحية الإدمن
 const isAdmin = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const customToken = req.headers['x-admin-token'];
     const expectedToken = process.env.ADMIN_TOKEN;
 
     if (!expectedToken) {
-        return res.status(500).json({ success: false, message: 'ADMIN_TOKEN غير معرف في متغيرات البيئة' });
+        return res.status(500).json({ success: false, message: 'ADMIN_TOKEN غير معرف' });
     }
 
     if ((authHeader && authHeader === `Bearer ${expectedToken}`) || customToken === expectedToken) {
@@ -55,7 +55,7 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-// 4. API Endpoints
+// 4. مسارات API للأدمن
 app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body || {};
     const validEmail = process.env.ADMIN_EMAIL;
@@ -157,25 +157,27 @@ app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
     }
 });
 
-// 5. Static Files Serving (خدمة الملفات الثابتة من مجلد admin ومجلد الجذر)
-app.use(express.static(path.join(__dirname, 'admin')));
+// 5. تقديم الملفات الثابتة بشكل منفصل ومستقل
+app.use('/admin', express.static(path.join(__dirname, 'admin')));
 app.use(express.static(__dirname));
 
-// 6. Routes Navigation
+// 6. توجيه الصفحات بشكل منضبط
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin', 'login.html'));
 });
 
-app.get('/login.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin', 'login.html'));
+// المسار الرئيسي يفتح موقع المستخدمين الأساسي
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// لمنع السيرفر من إرجاع ملف HTML بدلاً من CSS أو JS مفقود
-app.get('*', (req, res) => {
-    if (req.url.endsWith('.css') || req.url.endsWith('.js')) {
-        return res.status(404).send('File not found');
+// التعامل مع أي مسار غير معروف
+app.use((req, res) => {
+    if (req.accepts('html')) {
+        res.sendFile(path.join(__dirname, 'index.html'));
+        return;
     }
-    res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+    res.status(404).json({ success: false, message: 'غير موجود' });
 });
 
 app.listen(PORT, () => {
