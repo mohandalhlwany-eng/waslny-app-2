@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -157,27 +158,33 @@ app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
     }
 });
 
-// 5. تقديم الملفات الثابتة بشكل منفصل ومستقل
+// 5. تقديم الملفات الثابتة
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 app.use(express.static(__dirname));
 
-// 6. توجيه الصفحات بشكل منضبط
+// 6. توجيه الصفحات بشكل آمن بدون تعليق السيرفر
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin', 'login.html'));
-});
-
-// المسار الرئيسي يفتح موقع المستخدمين الأساسي
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// التعامل مع أي مسار غير معروف
-app.use((req, res) => {
-    if (req.accepts('html')) {
-        res.sendFile(path.join(__dirname, 'index.html'));
-        return;
+    const loginPath = path.join(__dirname, 'admin', 'login.html');
+    if (fs.existsSync(loginPath)) {
+        res.sendFile(loginPath);
+    } else {
+        res.status(404).send('صفحة الدخول غير موجودة');
     }
-    res.status(404).json({ success: false, message: 'غير موجود' });
+});
+
+// المسار الرئيسي للموقع
+app.get('/', (req, res) => {
+    const mainIndexPath = path.join(__dirname, 'index.html');
+    if (fs.existsSync(mainIndexPath)) {
+        res.sendFile(mainIndexPath);
+    } else {
+        res.json({ success: true, message: 'Waslni Saree API Server Active' });
+    }
+});
+
+// التعامل مع المسارات المفقودة دون رمي أخطاء ENOENT
+app.use((req, res) => {
+    res.status(404).json({ success: false, message: 'المسار المطلوب غير موجود' });
 });
 
 app.listen(PORT, () => {
