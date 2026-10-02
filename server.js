@@ -8,12 +8,12 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 1. الاتصال بقاعدة البيانات
+// 1. الاتصال بقاعدة البيانات Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
-// 2. إعدادات CORS الشاملة
+// 2. إعدادات CORS والوسائط المتعددة
 const allowedOrigins = [
     'https://admin.waslnisaree.com',
     'https://waslnisaree.com',
@@ -56,7 +56,7 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-// 4. مسارات API للأدمن
+// 4. مسارات API الخاصة بالوحة التحكم
 app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body || {};
     const validEmail = process.env.ADMIN_EMAIL;
@@ -158,31 +158,47 @@ app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
     }
 });
 
-// 5. تقديم الملفات الثابتة
+// 5. تقديم الملفات الثابتة من كافة المجلدات المحتملة
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/dist', express.static(path.join(__dirname, 'dist')));
+app.use('/build', express.static(path.join(__dirname, 'build')));
 app.use(express.static(__dirname));
 
-// 6. توجيه الصفحات بشكل آمن بدون تعليق السيرفر
+// 6. توجيه الصفحات تلقائياً دون رمي أخطاء ENOENT
 app.get('/login', (req, res) => {
-    const loginPath = path.join(__dirname, 'admin', 'login.html');
-    if (fs.existsSync(loginPath)) {
-        res.sendFile(loginPath);
-    } else {
-        res.status(404).send('صفحة الدخول غير موجودة');
+    const possibleLoginPaths = [
+        path.join(__dirname, 'admin', 'login.html'),
+        path.join(__dirname, 'login.html'),
+        path.join(__dirname, 'public', 'login.html')
+    ];
+    for (const p of possibleLoginPaths) {
+        if (fs.existsSync(p)) return res.sendFile(p);
     }
+    res.status(404).send('صفحة تسجيل الدخول غير موجودة');
 });
 
-// المسار الرئيسي للموقع
+// الصفحة الرئيسية للموقع
 app.get('/', (req, res) => {
-    const mainIndexPath = path.join(__dirname, 'index.html');
-    if (fs.existsSync(mainIndexPath)) {
-        res.sendFile(mainIndexPath);
-    } else {
-        res.json({ success: true, message: 'Waslni Saree API Server Active' });
+    const possibleIndexPaths = [
+        path.join(__dirname, 'index.html'),
+        path.join(__dirname, 'public', 'index.html'),
+        path.join(__dirname, 'dist', 'index.html'),
+        path.join(__dirname, 'build', 'index.html'),
+        path.join(__dirname, 'admin', 'index.html')
+    ];
+
+    for (const p of possibleIndexPaths) {
+        if (fs.existsSync(p)) {
+            return res.sendFile(p);
+        }
     }
+
+    // استجابة آمنة بديلة في حال عدم وجود ملف HTML
+    res.json({ success: true, message: 'Waslni Saree API Server Active' });
 });
 
-// التعامل مع المسارات المفقودة دون رمي أخطاء ENOENT
+// التعامل مع باقي المسارات غير المحددة
 app.use((req, res) => {
     res.status(404).json({ success: false, message: 'المسار المطلوب غير موجود' });
 });
