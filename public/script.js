@@ -26,6 +26,33 @@ const locations = {
 const mainHubs = ["بني سويف", "المنيا"];
 
 // ==========================================
+// دالة حساب تاريخ رحلات الخميس تلقائياً
+// ==========================================
+function getUpcomingThursdayDate(includeYear = false) {
+    const today = new Date();
+    const currentDay = today.getDay(); // 0: الأحد, 4: الخميس, 5: الجمعة, 6: السبت
+
+    let distance = 4 - currentDay;
+
+    if (distance < -1) {
+        distance += 7;
+    }
+
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + distance);
+
+    const dayNum = String(targetDate.getDate()).padStart(2, '0');
+    const monthNum = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const yearNum = targetDate.getFullYear();
+
+    if (includeYear) {
+        return `الخميس (${dayNum}/${monthNum}/${yearNum})`;
+    }
+
+    return `الخميس (${dayNum}/${monthNum})`;
+}
+
+// ==========================================
 // 3. جدول الرحلات المخصصة
 // ==========================================
 const customTrips = [
