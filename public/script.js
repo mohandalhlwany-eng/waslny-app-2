@@ -27,17 +27,12 @@ const mainHubs = ["بني سويف", "المنيا"];
 
 // ==========================================
 // دالة حساب تاريخ رحلات الخميس تلقائياً
-// (تتغير تلقائياً يوم الجمعة لتجيب الخميس القادم)
 // ==========================================
 function getUpcomingThursdayDate(includeYear = false) {
     const today = new Date();
     const currentDay = today.getDay(); // 0: الأحد, 4: الخميس, 5: الجمعة, 6: السبت
 
-    // حساب الفارق بين اليوم الحالي ويوم الخميس (رقم 4)
     let distance = 4 - currentDay;
-
-    // بمجرد دخول يوم الجمعة (distance = -1) أو السبت (distance = -2)
-    // يتم تحويل الحساب للخميس القادم (+7 أيام)
     if (distance < 0) {
         distance += 7;
     }
@@ -57,10 +52,11 @@ function getUpcomingThursdayDate(includeYear = false) {
 }
 
 // ==========================================
-// 3. جدول الرحلات المخصصة
+// 3. جدول الرحلات المخصصة (مع إضافة tripCode لكل رحلة)
 // ==========================================
 const customTrips = [
     {
+        tripCode: "TRIP-MNS-BNS-08AM",
         fromCity: "المنصورة",
         toCity: "بني سويف",
         time: "08:00 ص",
@@ -68,6 +64,7 @@ const customTrips = [
         days: "يومياً"
     },
     {
+        tripCode: "TRIP-MNS-BNS-11AM",
         fromCity: "المنصورة",
         toCity: "بني سويف",
         time: "11:30 ص",
@@ -75,15 +72,15 @@ const customTrips = [
         days: "يومياً"
     },
     {
-    tripCode: "TRIP-BNS-MNS-THU-04PM",
-    fromCity: "بني سويف",
-    toCity: "المنصورة",
-    days: getUpcomingThursdayDate(),
-    time: "04:00 عصرا",
-    price: "355",
-    
-},
+        tripCode: "TRIP-BNS-MNS-THU-04PM",
+        fromCity: "بني سويف",
+        toCity: "المنصورة",
+        days: getUpcomingThursdayDate(),
+        time: "04:00 عصرا",
+        price: "355"
+    },
     {
+        tripCode: "TRIP-SHR-BNS-09AM",
         fromCity: "الشرقية",
         toCity: "بني سويف",
         time: "09:00 ص",
@@ -91,6 +88,9 @@ const customTrips = [
         days: "طوال الأسبوع"
     }
 ];
+
+// متغير عام لتخزين الرحلة التي يختارها المستخدم
+let selectedTripData = null;
 
 // ==========================================
 // 4. دالة التنقل بين الصفحات (العامة)
@@ -203,7 +203,9 @@ function generateTrips() {
         return;
     }
 
-    matchingTrips.forEach(trip => {
+    window.currentMatchingTrips = matchingTrips;
+
+    matchingTrips.forEach((trip, index) => {
         tripsList.innerHTML += `
             <div class="trip-card">
                 <div class="trip-price">${trip.price} <span>جنية</span></div>
@@ -215,13 +217,23 @@ function generateTrips() {
                     🕒 ${trip.time}
                     ${trip.days ? `<div style="font-size: 13px; color: #666; margin-top: 4px;">📅 ${trip.days}</div>` : ''}
                 </div>
-                <button class="main-btn" style="margin-top: 10px; padding: 8px 15px; font-size: 14px;" onclick="selectTrip()">اختر الرحلة</button>
+                <button class="main-btn" style="margin-top: 10px; padding: 8px 15px; font-size: 14px;" onclick="selectTrip(${index})">اختر الرحلة</button>
             </div>
         `;
     });
 }
 
-window.selectTrip = function() {
+window.selectTrip = function(index) {
+    if (window.currentMatchingTrips && window.currentMatchingTrips[index]) {
+        selectedTripData = window.currentMatchingTrips[index];
+    } else {
+        selectedTripData = {
+            tripCode: "TRIP-GENERIC",
+            days: "يومياً",
+            time: "08:00 ص"
+        };
+    }
+    console.log("📌 تم اختيار الرحلة:", selectedTripData);
     switchSection('section-data');
 };
 
@@ -233,16 +245,61 @@ const phoneInput = document.getElementById('passenger-phone');
 const phoneError = document.getElementById('phone-error');
 
 async function saveBookingToSupabase(customerData, fromVal, toVal) {
-    const { data: userData, error: userError } = await supabase.from('users').insert([{ name: customerData.name, phone: customerData.phone }]).select();
+    // تجهيز قيم الحقول المفصلة
+    const tripCodeVal = selectedTripData?.tripCode || 'TRIP-GENERIC';
+    const mainRouteVal = `${cityFromSelect.value} ⬅️ ${cityToSelect.value}`;
+    const pickupStationVal = stationFromSelect.value || 'غير محدد';
+    const departureDateVal = selectedTripData?.days || 'يومياً';
+    const departureTimeVal = selectedTripData?.time || 'غير محدد';
+
+    console.log("🚀 جاري إرسال الحجز إلى Supabase مع البيانات التالية:", {
+        passenger: customerData,
+        trip_code: tripCodeVal,
+        main_route: mainRouteVal,
+        pickup_station: pickupStationVal,
+        departure_date: departureDateVal,
+        departure_time: departureTimeVal,
+        fromVal,
+        toVal
+    });
+
+    // 1. إضافة المسافر لجدول users
+    const { data: userData, error: userError } = await supabase
+        .from('users')
+        .insert([{ 
+            name: customerData.name, 
+            phone: customerData.phone 
+        }])
+        .select();
+
     if (userError) {
-        console.error('خطأ في حفظ المستخدم:', userError.message);
+        console.error('❌ خطأ في حفظ المستخدم في جدول users:', userError.message);
         return;
     }
     
-    const newUserId = userData && userData.length > 0 ? userData[0].id : 1;
-    const { data, error } = await supabase.from('Trip').insert([{ user_id: newUserId, From_location: fromVal, To_location: toVal }]);
-    if (error) console.error('خطأ في حفظ الرحلة:', error.message);
-    else console.log('تم الحجز بنجاح في Supabase', data);
+    const newUserId = (userData && userData.length > 0) ? userData[0].id : null;
+    console.log("✅ تم إنشاء المستخدم بنجاح مع ID:", newUserId);
+
+    // 2. إضافة الرحلة مع كافة الأعمدة لجدول Trip
+    const { data: tripData, error: tripError } = await supabase
+        .from('Trip')
+        .insert([{ 
+            user_id: newUserId, 
+            From_location: fromVal, 
+            To_location: toVal,
+            trip_code: tripCodeVal,
+            main_route: mainRouteVal,
+            pickup_station: pickupStationVal,
+            departure_date: departureDateVal,
+            departure_time: departureTimeVal
+        }])
+        .select();
+
+    if (tripError) {
+        console.error('❌ خطأ في حفظ الرحلة في جدول Trip:', tripError.message);
+    } else {
+        console.log('🎉 تم حفظ الحجز بنجاح في Supabase! البيانات المخزنة:', tripData);
+    }
 }
 
 if (passengerForm) {
@@ -326,7 +383,6 @@ function applyTheme(theme) {
     const isDark = theme === 'dark';
     document.body.classList.toggle('dark-mode', isDark);
     
-    // تحديث كافة أزرار النمط الليلي بجميع الصفحات
     const darkModeBtns = document.querySelectorAll('.dark-mode-toggle');
     darkModeBtns.forEach(btn => {
         const icon = btn.querySelector('i');
@@ -337,12 +393,10 @@ function applyTheme(theme) {
     localStorage.setItem('theme', theme);
 }
 
-// قراءة الحالة السابقة عند التحميل
 document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
 
-    // إضافة مستمع الأحداث لكافة أزرار النمط الليلي
     document.querySelectorAll('.dark-mode-toggle').forEach(btn => {
         btn.addEventListener('click', () => {
             const currentTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
