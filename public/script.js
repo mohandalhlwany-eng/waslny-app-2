@@ -44,12 +44,13 @@ const customTrips = [
         days: "يومياً"
     },
     {
-        fromCity: "بني سويف",
-        toCity: "المنصورة",
-        time: "04:00 عصرا",
-        price: "355",
-        days: "الخميس"
-    },
+    tripCode: "TRIP-BNS-MNS-THU-04PM",
+    fromCity: "بني سويف",
+    toCity: "المنصورة",
+    time: "04:00 عصرا",
+    price: "355",
+    days: getUpcomingThursdayDate()
+},
     {
         fromCity: "الشرقية",
         toCity: "بني سويف",
