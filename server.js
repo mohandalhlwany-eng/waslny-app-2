@@ -7,7 +7,7 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 1. الاتصال بقاعدة بيانات Supabase عبر متغيرات البيئة فقط بدون مفاتيح سرية مكشوفة
+// 1. الاتصال بقاعدة بيانات Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
@@ -17,11 +17,12 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
-// 2. إعدادات CORS الشاملة للسماح بالاتصال بين الدومين الفرعي والرئيسي
+// 2. إعدادات CORS الشاملة للربط بين السيرفر والنطاق الفرعي
 const allowedOrigins = [
     'https://admin.waslnisaree.com',
     'https://waslnisaree.com',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
 ];
 
 app.use(cors({
@@ -37,11 +38,14 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token']
 }));
 
+// معالجة طلبات Preflight لجميع المسارات
+app.options('*', cors());
+
 app.use(express.json());
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.set('trust proxy', 1);
 
-// 3. التحقق من التوكين الخاص بالإدمن
+// 3. التحقق من توكن الإدمن
 const isAdmin = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const customToken = req.headers['x-admin-token'];
@@ -58,7 +62,7 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-// 4. مسار تسجيل الدخول للوحة التحكم
+// 4. تسجيل الدخول
 app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body || {};
     const validEmail = process.env.ADMIN_EMAIL;
@@ -81,10 +85,9 @@ app.post('/api/admin/login', (req, res) => {
     return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
 });
 
-// 5. مسار جلب الحجوزات مفرزة ومجمعة حسب كل رحلة
+// 5. جلب الحجوزات
 app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     try {
-        // جلب جدول users وجدول Trip بشكل آمن
         const { data: users, error: uErr } = await supabase.from('users').select('*').order('created_at', { ascending: false });
         if (uErr) throw uErr;
 
@@ -94,7 +97,6 @@ app.get('/api/admin/bookings', isAdmin, async (req, res) => {
         const usersList = users || [];
         const tripsList = trips || [];
 
-        // تجميع وتصنيف البيانات حسب كل رحلة (From_location -> To_location)
         const groupedTrips = {};
 
         usersList.forEach(user => {
@@ -139,7 +141,7 @@ app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     }
 });
 
-// 6. تحديث حالة الحجز (مؤكد / ملغى)
+// 6. تحديث حالة الحجز
 app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -152,7 +154,7 @@ app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
     }
 });
 
-// 7. تحديث حالة الدفع (تم الدفع / معلق)
+// 7. تحديث حالة الدفع
 app.patch('/api/admin/bookings/:id/payment', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -177,7 +179,7 @@ app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
     }
 });
 
-// 9. تقديم الملفات الثابتة والواجهات
+// 9. تقديم الملفات الثابتة
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/*', (req, res) => {
