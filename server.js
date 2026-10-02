@@ -7,17 +7,12 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 1. الاتصال بقاعدة بيانات Supabase
+// 1. Supabase Connection
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-    console.warn('تنبيه: لم يتم العثور على SUPABASE_URL أو SUPABASE_KEY في متغيرات البيئة.');
-}
-
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
-// 2. إعدادات CORS الشاملة للربط بين السيرفر والنطاق الفرعي
+// 2. CORS Settings
 const allowedOrigins = [
     'https://admin.waslnisaree.com',
     'https://waslnisaree.com',
@@ -38,21 +33,19 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token']
 }));
 
-// معالجة طلبات Preflight لجميع المسارات
 app.options('*', cors());
-
 app.use(express.json());
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.set('trust proxy', 1);
 
-// 3. التحقق من توكن الإدمن
+// 3. Admin Middleware
 const isAdmin = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const customToken = req.headers['x-admin-token'];
     const expectedToken = process.env.ADMIN_TOKEN;
 
     if (!expectedToken) {
-        return res.status(500).json({ success: false, message: 'خطأ في إعدادات السيرفر: ADMIN_TOKEN غير معرف' });
+        return res.status(500).json({ success: false, message: 'ADMIN_TOKEN غير معرف في متغيرات البيئة' });
     }
 
     if ((authHeader && authHeader === `Bearer ${expectedToken}`) || customToken === expectedToken) {
@@ -62,7 +55,7 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-// 4. تسجيل الدخول
+// 4. API Endpoints
 app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body || {};
     const validEmail = process.env.ADMIN_EMAIL;
@@ -70,7 +63,7 @@ app.post('/api/admin/login', (req, res) => {
     const adminToken = process.env.ADMIN_TOKEN;
 
     if (!validEmail || !validPassword || !adminToken) {
-        return res.status(500).json({ success: false, message: 'بيانات تسجيل الدخول غير مهيأة في متغيرات البيئة' });
+        return res.status(500).json({ success: false, message: 'بيانات الدخول غير مهيأة في متغيرات البيئة' });
     }
 
     if (email === validEmail && password === validPassword) {
@@ -82,18 +75,15 @@ app.post('/api/admin/login', (req, res) => {
         });
     }
 
-    return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+    return res.status(401).json({ success: false, message: 'البريد أو كلمة المرور غير صحيحة' });
 });
 
-// 5. جلب الحجوزات
 app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     try {
         const { data: users, error: uErr } = await supabase.from('users').select('*').order('created_at', { ascending: false });
         if (uErr) throw uErr;
 
-        const { data: trips, error: tErr } = await supabase.from('Trip').select('*');
-        if (tErr) console.error('Trip fetch notice:', tErr);
-
+        const { data: trips } = await supabase.from('Trip').select('*');
         const usersList = users || [];
         const tripsList = trips || [];
 
@@ -129,69 +119,63 @@ app.get('/api/admin/bookings', isAdmin, async (req, res) => {
             });
         });
 
-        res.json({
-            success: true,
-            total_records: usersList.length,
-            trips: Object.values(groupedTrips)
-        });
-
+        res.json({ success: true, total_records: usersList.length, trips: Object.values(groupedTrips) });
     } catch (err) {
-        console.error('Bookings Fetch Error:', err);
         res.status(500).json({ success: false, message: 'خطأ أثناء جلب الحجوزات', error: err.message });
     }
 });
 
-// 6. تحديث حالة الحجز
 app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const { error } = await supabase.from('users').update({ status }).eq('id', id);
-        if (error) throw error;
+        await supabase.from('users').update({ status }).eq('id', id);
         res.json({ success: true, message: 'تم تحديث حالة الحجز' });
     } catch (err) {
         res.status(500).json({ success: false, message: 'خطأ في التحديث' });
     }
 });
 
-// 7. تحديث حالة الدفع
 app.patch('/api/admin/bookings/:id/payment', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { payment_status } = req.body;
-        const { error } = await supabase.from('users').update({ payment_status }).eq('id', id);
-        if (error) throw error;
+        await supabase.from('users').update({ payment_status }).eq('id', id);
         res.json({ success: true, message: 'تم تحديث حالة الدفع' });
     } catch (err) {
         res.status(500).json({ success: false, message: 'خطأ في التحديث' });
     }
 });
 
-// 8. حذف حجز
 app.delete('/api/admin/bookings/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { error } = await supabase.from('users').delete().eq('id', id);
-        if (error) throw error;
-        res.json({ success: true, message: 'تم حذف الحجز بنجاح' });
+        await supabase.from('users').delete().eq('id', id);
+        res.json({ success: true, message: 'تم الحذف بنجاح' });
     } catch (err) {
         res.status(500).json({ success: false, message: 'خطأ في الحذف' });
     }
 });
 
-// 9. تقديم الملفات الثابتة
-app.use(express.static(path.join(__dirname, 'public')));
+// 5. Static Files Serving (خدمة الملفات الثابتة من مجلد admin ومجلد الجذر)
+app.use(express.static(path.join(__dirname, 'admin')));
+app.use(express.static(__dirname));
 
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ success: false, message: 'مسار API غير موجود' });
-});
-
+// 6. Routes Navigation
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.sendFile(path.join(__dirname, 'admin', 'login.html'));
 });
 
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin', 'login.html'));
+});
+
+// لمنع السيرفر من إرجاع ملف HTML بدلاً من CSS أو JS مفقود
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+    if (req.url.endsWith('.css') || req.url.endsWith('.js')) {
+        return res.status(404).send('File not found');
+    }
+    res.sendFile(path.join(__dirname, 'admin', 'index.html'));
 });
 
 app.listen(PORT, () => {
